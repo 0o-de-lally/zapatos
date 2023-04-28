@@ -4,6 +4,7 @@ module aptos_framework::genesis {
     use std::vector;
 
     use aptos_std::simple_map;
+    use aptos_std::debug::print;
 
     use aptos_framework::account;
     use aptos_framework::aggregator_factory;
@@ -20,7 +21,7 @@ module aptos_framework::genesis {
     use aptos_framework::reconfiguration;
     use aptos_framework::stake;
     use aptos_framework::staking_contract;
-    use aptos_framework::staking_config;
+    // use aptos_framework::staking_config;
     use aptos_framework::state_storage;
     use aptos_framework::storage_gas;
     use aptos_framework::timestamp;
@@ -108,16 +109,16 @@ module aptos_framework::genesis {
         execution_config::set(&aptos_framework_account, execution_config);
         version::initialize(&aptos_framework_account, initial_version);
         stake::initialize(&aptos_framework_account);
-        staking_config::initialize(
-            &aptos_framework_account,
-            minimum_stake,
-            maximum_stake,
-            recurring_lockup_duration_secs,
-            allow_validator_set_change,
-            rewards_rate,
-            rewards_rate_denominator,
-            voting_power_increase_limit,
-        );
+        // staking_config::initialize(
+        //     &aptos_framework_account,
+        //     minimum_stake,
+        //     maximum_stake,
+        //     recurring_lockup_duration_secs,
+        //     allow_validator_set_change,
+        //     rewards_rate,
+        //     rewards_rate_denominator,
+        //     voting_power_increase_limit,
+        // );
         storage_gas::initialize(&aptos_framework_account);
         gas_schedule::initialize(&aptos_framework_account, gas_schedule);
 
@@ -290,18 +291,22 @@ module aptos_framework::genesis {
     ) {
         let i = 0;
         let num_validators = vector::length(&validators);
+        print(&10001);
         while (i < num_validators) {
+          print(&10002);
             let validator = vector::borrow(&validators, i);
             create_initialize_validator(aptos_framework, validator, use_staking_contract);
 
             i = i + 1;
         };
-
+        print(&10003);
         // Destroy the aptos framework account's ability to mint coins now that we're done with setting up the initial
         // validators.
         aptos_coin::destroy_mint_cap(aptos_framework);
+        print(&10004);
 
         stake::on_new_epoch();
+        print(&10005);
     }
 
     /// Sets up the initial validator set for the network.
@@ -340,13 +345,14 @@ module aptos_framework::genesis {
         use_staking_contract: bool,
     ) {
         let validator = &commission_config.validator_config;
-
+        print(&20001);
         let owner = &create_account(aptos_framework, validator.owner_address, validator.stake_amount);
         create_account(aptos_framework, validator.operator_address, 0);
         create_account(aptos_framework, validator.voter_address, 0);
-
+        print(&20002);
         // Initialize the stake pool and join the validator set.
         let pool_address = if (use_staking_contract) {
+          print(&2000201);
             staking_contract::create_staking_contract(
                 owner,
                 validator.operator_address,
@@ -357,36 +363,46 @@ module aptos_framework::genesis {
             );
             staking_contract::stake_pool_address(validator.owner_address, validator.operator_address)
         } else {
+            print(&2000202);
+
             stake::initialize_stake_owner(
                 owner,
                 validator.stake_amount,
                 validator.operator_address,
                 validator.voter_address,
             );
+            print(&2000203);
             validator.owner_address
         };
+        print(&20003);
+
 
         if (commission_config.join_during_genesis) {
+                  print(&20004);
+
             initialize_validator(pool_address, validator);
         };
     }
 
     fun initialize_validator(pool_address: address, validator: &ValidatorConfiguration) {
         let operator = &create_signer(validator.operator_address);
-
+        print(&30001);
         stake::rotate_consensus_key(
             operator,
             pool_address,
             validator.consensus_pubkey,
             validator.proof_of_possession,
         );
+        print(&30002);
         stake::update_network_and_fullnode_addresses(
             operator,
             pool_address,
             validator.network_addresses,
             validator.full_node_network_addresses,
         );
+        print(&30003);
         stake::join_validator_set_internal(operator, pool_address);
+        print(&30004);
     }
 
     /// The last step of genesis.

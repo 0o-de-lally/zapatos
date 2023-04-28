@@ -346,6 +346,7 @@ impl BlockStore {
         &self,
         block: Block,
     ) -> anyhow::Result<Arc<ExecutedBlock>> {
+        dbg!(&block.round());
         if let Some(existing_block) = self.get_block(block.id()) {
             return Ok(existing_block);
         }

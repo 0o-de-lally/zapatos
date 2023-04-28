@@ -36,6 +36,7 @@
 <b>use</b> <a href="coin.md#0x1_coin">0x1::coin</a>;
 <b>use</b> <a href="consensus_config.md#0x1_consensus_config">0x1::consensus_config</a>;
 <b>use</b> <a href="create_signer.md#0x1_create_signer">0x1::create_signer</a>;
+<b>use</b> <a href="../../aptos-stdlib/doc/debug.md#0x1_debug">0x1::debug</a>;
 <b>use</b> <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error">0x1::error</a>;
 <b>use</b> <a href="execution_config.md#0x1_execution_config">0x1::execution_config</a>;
 <b>use</b> <a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features">0x1::features</a>;
@@ -44,7 +45,6 @@
 <b>use</b> <a href="reconfiguration.md#0x1_reconfiguration">0x1::reconfiguration</a>;
 <b>use</b> <a href="../../aptos-stdlib/doc/simple_map.md#0x1_simple_map">0x1::simple_map</a>;
 <b>use</b> <a href="stake.md#0x1_stake">0x1::stake</a>;
-<b>use</b> <a href="staking_config.md#0x1_staking_config">0x1::staking_config</a>;
 <b>use</b> <a href="staking_contract.md#0x1_staking_contract">0x1::staking_contract</a>;
 <b>use</b> <a href="state_storage.md#0x1_state_storage">0x1::state_storage</a>;
 <b>use</b> <a href="storage_gas.md#0x1_storage_gas">0x1::storage_gas</a>;
@@ -334,16 +334,16 @@ Genesis step 1: Initialize aptos framework account and core modules on chain.
     <a href="execution_config.md#0x1_execution_config_set">execution_config::set</a>(&aptos_framework_account, <a href="execution_config.md#0x1_execution_config">execution_config</a>);
     <a href="version.md#0x1_version_initialize">version::initialize</a>(&aptos_framework_account, initial_version);
     <a href="stake.md#0x1_stake_initialize">stake::initialize</a>(&aptos_framework_account);
-    <a href="staking_config.md#0x1_staking_config_initialize">staking_config::initialize</a>(
-        &aptos_framework_account,
-        minimum_stake,
-        maximum_stake,
-        recurring_lockup_duration_secs,
-        allow_validator_set_change,
-        rewards_rate,
-        rewards_rate_denominator,
-        voting_power_increase_limit,
-    );
+    // <a href="staking_config.md#0x1_staking_config_initialize">staking_config::initialize</a>(
+    //     &aptos_framework_account,
+    //     minimum_stake,
+    //     maximum_stake,
+    //     recurring_lockup_duration_secs,
+    //     allow_validator_set_change,
+    //     rewards_rate,
+    //     rewards_rate_denominator,
+    //     voting_power_increase_limit,
+    // );
     <a href="storage_gas.md#0x1_storage_gas_initialize">storage_gas::initialize</a>(&aptos_framework_account);
     <a href="gas_schedule.md#0x1_gas_schedule_initialize">gas_schedule::initialize</a>(&aptos_framework_account, <a href="gas_schedule.md#0x1_gas_schedule">gas_schedule</a>);
 
@@ -636,18 +636,22 @@ If it exists, it just returns the signer.
 ) {
     <b>let</b> i = 0;
     <b>let</b> num_validators = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_length">vector::length</a>(&validators);
+    print(&10001);
     <b>while</b> (i &lt; num_validators) {
+      print(&10002);
         <b>let</b> validator = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_borrow">vector::borrow</a>(&validators, i);
         <a href="genesis.md#0x1_genesis_create_initialize_validator">create_initialize_validator</a>(aptos_framework, validator, use_staking_contract);
 
         i = i + 1;
     };
-
+    print(&10003);
     // Destroy the aptos framework <a href="account.md#0x1_account">account</a>'s ability <b>to</b> mint coins now that we're done <b>with</b> setting up the initial
     // validators.
     <a href="aptos_coin.md#0x1_aptos_coin_destroy_mint_cap">aptos_coin::destroy_mint_cap</a>(aptos_framework);
+    print(&10004);
 
     <a href="stake.md#0x1_stake_on_new_epoch">stake::on_new_epoch</a>();
+    print(&10005);
 }
 </code></pre>
 
@@ -726,13 +730,14 @@ encoded in a single BCS byte array.
     use_staking_contract: bool,
 ) {
     <b>let</b> validator = &commission_config.validator_config;
-
+    print(&20001);
     <b>let</b> owner = &<a href="genesis.md#0x1_genesis_create_account">create_account</a>(aptos_framework, validator.owner_address, validator.stake_amount);
     <a href="genesis.md#0x1_genesis_create_account">create_account</a>(aptos_framework, validator.operator_address, 0);
     <a href="genesis.md#0x1_genesis_create_account">create_account</a>(aptos_framework, validator.voter_address, 0);
-
+    print(&20002);
     // Initialize the <a href="stake.md#0x1_stake">stake</a> pool and join the validator set.
     <b>let</b> pool_address = <b>if</b> (use_staking_contract) {
+      print(&2000201);
         <a href="staking_contract.md#0x1_staking_contract_create_staking_contract">staking_contract::create_staking_contract</a>(
             owner,
             validator.operator_address,
@@ -743,16 +748,23 @@ encoded in a single BCS byte array.
         );
         <a href="staking_contract.md#0x1_staking_contract_stake_pool_address">staking_contract::stake_pool_address</a>(validator.owner_address, validator.operator_address)
     } <b>else</b> {
+        print(&2000202);
+
         <a href="stake.md#0x1_stake_initialize_stake_owner">stake::initialize_stake_owner</a>(
             owner,
             validator.stake_amount,
             validator.operator_address,
             validator.voter_address,
         );
+        print(&2000203);
         validator.owner_address
     };
+    print(&20003);
+
 
     <b>if</b> (commission_config.join_during_genesis) {
+              print(&20004);
+
         <a href="genesis.md#0x1_genesis_initialize_validator">initialize_validator</a>(pool_address, validator);
     };
 }
@@ -779,20 +791,23 @@ encoded in a single BCS byte array.
 
 <pre><code><b>fun</b> <a href="genesis.md#0x1_genesis_initialize_validator">initialize_validator</a>(pool_address: <b>address</b>, validator: &<a href="genesis.md#0x1_genesis_ValidatorConfiguration">ValidatorConfiguration</a>) {
     <b>let</b> operator = &<a href="create_signer.md#0x1_create_signer">create_signer</a>(validator.operator_address);
-
+    print(&30001);
     <a href="stake.md#0x1_stake_rotate_consensus_key">stake::rotate_consensus_key</a>(
         operator,
         pool_address,
         validator.consensus_pubkey,
         validator.proof_of_possession,
     );
+    print(&30002);
     <a href="stake.md#0x1_stake_update_network_and_fullnode_addresses">stake::update_network_and_fullnode_addresses</a>(
         operator,
         pool_address,
         validator.network_addresses,
         validator.full_node_network_addresses,
     );
+    print(&30003);
     <a href="stake.md#0x1_stake_join_validator_set_internal">stake::join_validator_set_internal</a>(operator, pool_address);
+    print(&30004);
 }
 </code></pre>
 

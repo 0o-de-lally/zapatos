@@ -28,7 +28,7 @@ module aptos_framework::genesis {
     use aptos_framework::transaction_fee;
     use aptos_framework::transaction_validation;
     use aptos_framework::version;
-    use aptos_framework::vesting;
+    // use aptos_framework::vesting;
 
     const EDUPLICATE_ACCOUNT: u64 = 1;
     const EACCOUNT_DOES_NOT_EXIST: u64 = 2;
@@ -194,95 +194,95 @@ module aptos_framework::genesis {
         }
     }
 
-    fun create_employee_validators(
-        employee_vesting_start: u64,
-        employee_vesting_period_duration: u64,
-        employees: vector<EmployeeAccountMap>,
-    ) {
-        let i = 0;
-        let num_employee_groups = vector::length(&employees);
-        let unique_accounts = vector::empty();
+    // fun create_employee_validators(
+    //     employee_vesting_start: u64,
+    //     employee_vesting_period_duration: u64,
+    //     employees: vector<EmployeeAccountMap>,
+    // ) {
+    //     let i = 0;
+    //     let num_employee_groups = vector::length(&employees);
+    //     let unique_accounts = vector::empty();
 
-        while (i < num_employee_groups) {
-            let j = 0;
-            let employee_group = vector::borrow(&employees, i);
-            let num_employees_in_group = vector::length(&employee_group.accounts);
+    //     while (i < num_employee_groups) {
+    //         let j = 0;
+    //         let employee_group = vector::borrow(&employees, i);
+    //         let num_employees_in_group = vector::length(&employee_group.accounts);
 
-            let buy_ins = simple_map::create();
+    //         let buy_ins = simple_map::create();
 
-            while (j < num_employees_in_group) {
-                let account = vector::borrow(&employee_group.accounts, j);
-                assert!(
-                    !vector::contains(&unique_accounts, account),
-                    error::already_exists(EDUPLICATE_ACCOUNT),
-                );
-                vector::push_back(&mut unique_accounts, *account);
+    //         while (j < num_employees_in_group) {
+    //             let account = vector::borrow(&employee_group.accounts, j);
+    //             assert!(
+    //                 !vector::contains(&unique_accounts, account),
+    //                 error::already_exists(EDUPLICATE_ACCOUNT),
+    //             );
+    //             vector::push_back(&mut unique_accounts, *account);
 
-                let employee = create_signer(*account);
-                let total = coin::balance<AptosCoin>(*account);
-                let coins = coin::withdraw<AptosCoin>(&employee, total);
-                simple_map::add(&mut buy_ins, *account, coins);
+    //             let employee = create_signer(*account);
+    //             let total = coin::balance<AptosCoin>(*account);
+    //             let coins = coin::withdraw<AptosCoin>(&employee, total);
+    //             simple_map::add(&mut buy_ins, *account, coins);
 
-                j = j + 1;
-            };
+    //             j = j + 1;
+    //         };
 
-            let j = 0;
-            let num_vesting_events = vector::length(&employee_group.vesting_schedule_numerator);
-            let schedule = vector::empty();
+    //         let j = 0;
+    //         let num_vesting_events = vector::length(&employee_group.vesting_schedule_numerator);
+    //         let schedule = vector::empty();
 
-            while (j < num_vesting_events) {
-                let numerator = vector::borrow(&employee_group.vesting_schedule_numerator, j);
-                let event = fixed_point32::create_from_rational(*numerator, employee_group.vesting_schedule_denominator);
-                vector::push_back(&mut schedule, event);
+    //         while (j < num_vesting_events) {
+    //             let numerator = vector::borrow(&employee_group.vesting_schedule_numerator, j);
+    //             let event = fixed_point32::create_from_rational(*numerator, employee_group.vesting_schedule_denominator);
+    //             vector::push_back(&mut schedule, event);
 
-                j = j + 1;
-            };
+    //             j = j + 1;
+    //         };
 
-            let vesting_schedule = vesting::create_vesting_schedule(
-                schedule,
-                employee_vesting_start,
-                employee_vesting_period_duration,
-            );
+    //         let vesting_schedule = vesting::create_vesting_schedule(
+    //             schedule,
+    //             employee_vesting_start,
+    //             employee_vesting_period_duration,
+    //         );
 
-            let admin = employee_group.validator.validator_config.owner_address;
-            let admin_signer = &create_signer(admin);
-            let contract_address = vesting::create_vesting_contract(
-                admin_signer,
-                &employee_group.accounts,
-                buy_ins,
-                vesting_schedule,
-                admin,
-                employee_group.validator.validator_config.operator_address,
-                employee_group.validator.validator_config.voter_address,
-                employee_group.validator.commission_percentage,
-                x"",
-            );
-            let pool_address = vesting::stake_pool_address(contract_address);
+    //         let admin = employee_group.validator.validator_config.owner_address;
+    //         let admin_signer = &create_signer(admin);
+    //         let contract_address = vesting::create_vesting_contract(
+    //             admin_signer,
+    //             &employee_group.accounts,
+    //             buy_ins,
+    //             vesting_schedule,
+    //             admin,
+    //             employee_group.validator.validator_config.operator_address,
+    //             employee_group.validator.validator_config.voter_address,
+    //             employee_group.validator.commission_percentage,
+    //             x"",
+    //         );
+    //         let pool_address = vesting::stake_pool_address(contract_address);
 
-            if (employee_group.beneficiary_resetter != @0x0) {
-                vesting::set_beneficiary_resetter(admin_signer, contract_address, employee_group.beneficiary_resetter);
-            };
+    //         if (employee_group.beneficiary_resetter != @0x0) {
+    //             // vesting::set_beneficiary_resetter(admin_signer, contract_address, employee_group.beneficiary_resetter);
+    //         };
 
-            let validator = &employee_group.validator.validator_config;
-            assert!(
-                account::exists_at(validator.owner_address),
-                error::not_found(EACCOUNT_DOES_NOT_EXIST),
-            );
-            assert!(
-                account::exists_at(validator.operator_address),
-                error::not_found(EACCOUNT_DOES_NOT_EXIST),
-            );
-            assert!(
-                account::exists_at(validator.voter_address),
-                error::not_found(EACCOUNT_DOES_NOT_EXIST),
-            );
-            if (employee_group.validator.join_during_genesis) {
-                initialize_validator(pool_address, validator);
-            };
+    //         let validator = &employee_group.validator.validator_config;
+    //         assert!(
+    //             account::exists_at(validator.owner_address),
+    //             error::not_found(EACCOUNT_DOES_NOT_EXIST),
+    //         );
+    //         assert!(
+    //             account::exists_at(validator.operator_address),
+    //             error::not_found(EACCOUNT_DOES_NOT_EXIST),
+    //         );
+    //         assert!(
+    //             account::exists_at(validator.voter_address),
+    //             error::not_found(EACCOUNT_DOES_NOT_EXIST),
+    //         );
+    //         if (employee_group.validator.join_during_genesis) {
+    //             initialize_validator(pool_address, validator);
+    //         };
 
-            i = i + 1;
-        }
-    }
+    //         i = i + 1;
+    //     }
+    // }
 
     fun create_initialize_validators_with_commission(
         aptos_framework: &signer,
@@ -461,7 +461,7 @@ module aptos_framework::genesis {
             voting_duration_secs
         );
         create_accounts(aptos_framework, accounts);
-        create_employee_validators(employee_vesting_start, employee_vesting_period_duration, employees);
+        // create_employee_validators(employee_vesting_start, employee_vesting_period_duration, employees);
         create_initialize_validators_with_commission(aptos_framework, true, validators);
         set_genesis_end(aptos_framework);
     }

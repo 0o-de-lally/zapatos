@@ -851,7 +851,7 @@ Return the number of delegators owning active stake within <code>pool_address</c
 
 <pre><code><b>public</b> <b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_shareholders_count_active_pool">shareholders_count_active_pool</a>(pool_address: <b>address</b>): u64 <b>acquires</b> <a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a> {
     <a href="delegation_pool.md#0x1_delegation_pool_assert_delegation_pool_exists">assert_delegation_pool_exists</a>(pool_address);
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shareholders_count">pool_u64::shareholders_count</a>(&<b>borrow_global</b>&lt;<a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>&gt;(pool_address).active_shares)
+    pool_u64::shareholders_count(&<b>borrow_global</b>&lt;<a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>&gt;(pool_address).active_shares)
 }
 </code></pre>
 
@@ -926,11 +926,11 @@ some stake and the stake pool's lockup cycle has not ended, their coins are not 
         <b>let</b> inactive_shares = <a href="../../aptos-stdlib/doc/table.md#0x1_table_borrow">table::borrow</a>(&pool.inactive_shares, withdrawal_olc);
         <b>if</b> (withdrawal_olc.index &lt; pool.observed_lockup_cycle.index) {
             // <b>if</b> withdrawal's lockup cycle ended on delegation pool then it is inactive
-            (<b>true</b>, <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_balance">pool_u64::balance</a>(inactive_shares, delegator_address))
+            (<b>true</b>, pool_u64::balance(inactive_shares, delegator_address))
         } <b>else</b> {
-            pending_inactive = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares_to_amount_with_total_coins">pool_u64::shares_to_amount_with_total_coins</a>(
+            pending_inactive = pool_u64::shares_to_amount_with_total_coins(
                 inactive_shares,
-                <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares">pool_u64::shares</a>(inactive_shares, delegator_address),
+                pool_u64::shares(inactive_shares, delegator_address),
                 // exclude operator pending_inactive rewards not converted <b>to</b> shares yet
                 pending_inactive - commission_pending_inactive
             );
@@ -973,14 +973,14 @@ in each of its individual states: (<code>active</code>,<code>inactive</code>,<co
         commission_pending_inactive
     ) = <a href="delegation_pool.md#0x1_delegation_pool_calculate_stake_pool_drift">calculate_stake_pool_drift</a>(pool);
 
-    <b>let</b> total_active_shares = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_total_shares">pool_u64::total_shares</a>(&pool.active_shares);
-    <b>let</b> delegator_active_shares = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares">pool_u64::shares</a>(&pool.active_shares, delegator_address);
+    <b>let</b> total_active_shares = pool_u64::total_shares(&pool.active_shares);
+    <b>let</b> delegator_active_shares = pool_u64::shares(&pool.active_shares, delegator_address);
 
     <b>let</b> (_, _, pending_active, _) = <a href="stake.md#0x1_stake_get_stake">stake::get_stake</a>(pool_address);
     <b>if</b> (pending_active == 0) {
         // zero `pending_active` <a href="stake.md#0x1_stake">stake</a> indicates that either there are no `add_stake` fees or
         // previous epoch <b>has</b> ended and should identify shares owning these fees <b>as</b> released
-        total_active_shares = total_active_shares - <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares">pool_u64::shares</a>(&pool.active_shares, <a href="delegation_pool.md#0x1_delegation_pool_NULL_SHAREHOLDER">NULL_SHAREHOLDER</a>);
+        total_active_shares = total_active_shares - pool_u64::shares(&pool.active_shares, <a href="delegation_pool.md#0x1_delegation_pool_NULL_SHAREHOLDER">NULL_SHAREHOLDER</a>);
         <b>if</b> (delegator_address == <a href="delegation_pool.md#0x1_delegation_pool_NULL_SHAREHOLDER">NULL_SHAREHOLDER</a>) {
             delegator_active_shares = 0
         }
@@ -1133,15 +1133,15 @@ Ownership over setting the operator/voter is granted to <code>owner</code> who h
     <b>let</b> pool_address = <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(&stake_pool_signer);
     <a href="stake.md#0x1_stake_initialize_stake_owner">stake::initialize_stake_owner</a>(&stake_pool_signer, 0, owner_address, owner_address);
 
-    <b>let</b> inactive_shares = <a href="../../aptos-stdlib/doc/table.md#0x1_table_new">table::new</a>&lt;<a href="delegation_pool.md#0x1_delegation_pool_ObservedLockupCycle">ObservedLockupCycle</a>, <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a>&gt;();
+    <b>let</b> inactive_shares = <a href="../../aptos-stdlib/doc/table.md#0x1_table_new">table::new</a>&lt;<a href="delegation_pool.md#0x1_delegation_pool_ObservedLockupCycle">ObservedLockupCycle</a>, pool_u64::Pool&gt;();
     <a href="../../aptos-stdlib/doc/table.md#0x1_table_add">table::add</a>(
         &<b>mut</b> inactive_shares,
         <a href="delegation_pool.md#0x1_delegation_pool_olc_with_index">olc_with_index</a>(0),
-        <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_create_with_scaling_factor">pool_u64::create_with_scaling_factor</a>(<a href="delegation_pool.md#0x1_delegation_pool_SHARES_SCALING_FACTOR">SHARES_SCALING_FACTOR</a>)
+        pool_u64::create_with_scaling_factor(<a href="delegation_pool.md#0x1_delegation_pool_SHARES_SCALING_FACTOR">SHARES_SCALING_FACTOR</a>)
     );
 
     <b>move_to</b>(&stake_pool_signer, <a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a> {
-        active_shares: <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_create_with_scaling_factor">pool_u64::create_with_scaling_factor</a>(<a href="delegation_pool.md#0x1_delegation_pool_SHARES_SCALING_FACTOR">SHARES_SCALING_FACTOR</a>),
+        active_shares: pool_u64::create_with_scaling_factor(<a href="delegation_pool.md#0x1_delegation_pool_SHARES_SCALING_FACTOR">SHARES_SCALING_FACTOR</a>),
         observed_lockup_cycle: <a href="delegation_pool.md#0x1_delegation_pool_olc_with_index">olc_with_index</a>(0),
         inactive_shares,
         pending_withdrawals: <a href="../../aptos-stdlib/doc/table.md#0x1_table_new">table::new</a>&lt;<b>address</b>, <a href="delegation_pool.md#0x1_delegation_pool_ObservedLockupCycle">ObservedLockupCycle</a>&gt;(),
@@ -1228,7 +1228,7 @@ Ownership over setting the operator/voter is granted to <code>owner</code> who h
 
 
 <pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_assert_min_active_balance">assert_min_active_balance</a>(pool: &<a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>, delegator_address: <b>address</b>) {
-    <b>let</b> balance = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_balance">pool_u64::balance</a>(&pool.active_shares, delegator_address);
+    <b>let</b> balance = pool_u64::balance(&pool.active_shares, delegator_address);
     <b>assert</b>!(balance &gt;= <a href="delegation_pool.md#0x1_delegation_pool_MIN_COINS_ON_SHARES_POOL">MIN_COINS_ON_SHARES_POOL</a>, <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="delegation_pool.md#0x1_delegation_pool_EDELEGATOR_ACTIVE_BALANCE_TOO_LOW">EDELEGATOR_ACTIVE_BALANCE_TOO_LOW</a>));
 }
 </code></pre>
@@ -1253,7 +1253,7 @@ Ownership over setting the operator/voter is granted to <code>owner</code> who h
 
 
 <pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_assert_min_pending_inactive_balance">assert_min_pending_inactive_balance</a>(pool: &<a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>, delegator_address: <b>address</b>) {
-    <b>let</b> balance = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_balance">pool_u64::balance</a>(<a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool">pending_inactive_shares_pool</a>(pool), delegator_address);
+    <b>let</b> balance = pool_u64::balance(<a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool">pending_inactive_shares_pool</a>(pool), delegator_address);
     <b>assert</b>!(
         balance &gt;= <a href="delegation_pool.md#0x1_delegation_pool_MIN_COINS_ON_SHARES_POOL">MIN_COINS_ON_SHARES_POOL</a>,
         <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="delegation_pool.md#0x1_delegation_pool_EDELEGATOR_PENDING_INACTIVE_BALANCE_TOO_LOW">EDELEGATOR_PENDING_INACTIVE_BALANCE_TOO_LOW</a>)
@@ -1281,17 +1281,17 @@ Ownership over setting the operator/voter is granted to <code>owner</code> who h
 
 
 <pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_coins_to_redeem_to_ensure_min_stake">coins_to_redeem_to_ensure_min_stake</a>(
-    src_shares_pool: &<a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a>,
+    src_shares_pool: &pool_u64::Pool,
     shareholder: <b>address</b>,
     amount: u64,
 ): u64 {
     // find how many coins would be redeemed <b>if</b> supplying `amount`
-    <b>let</b> redeemed_coins = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares_to_amount">pool_u64::shares_to_amount</a>(
+    <b>let</b> redeemed_coins = pool_u64::shares_to_amount(
         src_shares_pool,
         <a href="delegation_pool.md#0x1_delegation_pool_amount_to_shares_to_redeem">amount_to_shares_to_redeem</a>(src_shares_pool, shareholder, amount)
     );
     // <b>if</b> balance drops under threshold then redeem it entirely
-    <b>let</b> src_balance = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_balance">pool_u64::balance</a>(src_shares_pool, shareholder);
+    <b>let</b> src_balance = pool_u64::balance(src_shares_pool, shareholder);
     <b>if</b> (src_balance - redeemed_coins &lt; <a href="delegation_pool.md#0x1_delegation_pool_MIN_COINS_ON_SHARES_POOL">MIN_COINS_ON_SHARES_POOL</a>) {
         amount = src_balance;
     };
@@ -1319,18 +1319,18 @@ Ownership over setting the operator/voter is granted to <code>owner</code> who h
 
 
 <pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_coins_to_transfer_to_ensure_min_stake">coins_to_transfer_to_ensure_min_stake</a>(
-    src_shares_pool: &<a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a>,
-    dst_shares_pool: &<a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a>,
+    src_shares_pool: &pool_u64::Pool,
+    dst_shares_pool: &pool_u64::Pool,
     shareholder: <b>address</b>,
     amount: u64,
 ): u64 {
     // find how many coins would be redeemed from source <b>if</b> supplying `amount`
-    <b>let</b> redeemed_coins = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares_to_amount">pool_u64::shares_to_amount</a>(
+    <b>let</b> redeemed_coins = pool_u64::shares_to_amount(
         src_shares_pool,
         <a href="delegation_pool.md#0x1_delegation_pool_amount_to_shares_to_redeem">amount_to_shares_to_redeem</a>(src_shares_pool, shareholder, amount)
     );
     // <b>if</b> balance on destination would be less than threshold then redeem difference <b>to</b> threshold
-    <b>let</b> dst_balance = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_balance">pool_u64::balance</a>(dst_shares_pool, shareholder);
+    <b>let</b> dst_balance = pool_u64::balance(dst_shares_pool, shareholder);
     <b>if</b> (dst_balance + redeemed_coins &lt; <a href="delegation_pool.md#0x1_delegation_pool_MIN_COINS_ON_SHARES_POOL">MIN_COINS_ON_SHARES_POOL</a>) {
         // `redeemed_coins` &gt;= `amount` - 1 <b>as</b> redeem can lose at most 1 <a href="coin.md#0x1_coin">coin</a>
         amount = <a href="delegation_pool.md#0x1_delegation_pool_MIN_COINS_ON_SHARES_POOL">MIN_COINS_ON_SHARES_POOL</a> - dst_balance + 1;
@@ -1515,14 +1515,14 @@ Add <code>amount</code> of coins to the delegation pool <code>pool_address</code
     <a href="stake.md#0x1_stake_add_stake">stake::add_stake</a>(&<a href="delegation_pool.md#0x1_delegation_pool_retrieve_stake_pool_owner">retrieve_stake_pool_owner</a>(pool), amount);
 
     // but buy shares for delegator just for the remaining amount after fee
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_buy_in">pool_u64::buy_in</a>(&<b>mut</b> pool.active_shares, delegator_address, amount - add_stake_fee);
+    pool_u64::buy_in(&<b>mut</b> pool.active_shares, delegator_address, amount - add_stake_fee);
     <a href="delegation_pool.md#0x1_delegation_pool_assert_min_active_balance">assert_min_active_balance</a>(pool, delegator_address);
 
     // grant temporary ownership over `add_stake` fees <b>to</b> a separate shareholder in order <b>to</b>:
     // - not mistake them for rewards <b>to</b> pay the operator from
     // - distribute them together <b>with</b> the `active` rewards when this epoch ends
     // in order <b>to</b> appreciate all shares on the active pool atomically
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_buy_in">pool_u64::buy_in</a>(&<b>mut</b> pool.active_shares, <a href="delegation_pool.md#0x1_delegation_pool_NULL_SHAREHOLDER">NULL_SHAREHOLDER</a>, add_stake_fee);
+    pool_u64::buy_in(&<b>mut</b> pool.active_shares, <a href="delegation_pool.md#0x1_delegation_pool_NULL_SHAREHOLDER">NULL_SHAREHOLDER</a>, add_stake_fee);
 
     <a href="event.md#0x1_event_emit_event">event::emit_event</a>(
         &<b>mut</b> pool.add_stake_events,
@@ -1635,7 +1635,7 @@ Move <code>amount</code> of coins from pending_inactive to active.
 
     <a href="stake.md#0x1_stake_reactivate_stake">stake::reactivate_stake</a>(&<a href="delegation_pool.md#0x1_delegation_pool_retrieve_stake_pool_owner">retrieve_stake_pool_owner</a>(pool), amount);
 
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_buy_in">pool_u64::buy_in</a>(&<b>mut</b> pool.active_shares, delegator_address, amount);
+    pool_u64::buy_in(&<b>mut</b> pool.active_shares, delegator_address, amount);
     <a href="delegation_pool.md#0x1_delegation_pool_assert_min_active_balance">assert_min_active_balance</a>(pool, delegator_address);
 
     <a href="event.md#0x1_event_emit_event">event::emit_event</a>(
@@ -1807,7 +1807,7 @@ delegation pool, always the last item in <code>inactive_shares</code>.
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool_mut">pending_inactive_shares_pool_mut</a>(pool: &<b>mut</b> <a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>): &<b>mut</b> <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a> {
+<pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool_mut">pending_inactive_shares_pool_mut</a>(pool: &<b>mut</b> <a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>): &<b>mut</b> pool_u64::Pool {
     <b>let</b> observed_lockup_cycle = pool.observed_lockup_cycle;
     <a href="../../aptos-stdlib/doc/table.md#0x1_table_borrow_mut">table::borrow_mut</a>(&<b>mut</b> pool.inactive_shares, observed_lockup_cycle)
 }
@@ -1832,7 +1832,7 @@ delegation pool, always the last item in <code>inactive_shares</code>.
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool">pending_inactive_shares_pool</a>(pool: &<a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>): &<a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a> {
+<pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool">pending_inactive_shares_pool</a>(pool: &<a href="delegation_pool.md#0x1_delegation_pool_DelegationPool">DelegationPool</a>): &pool_u64::Pool {
     <a href="../../aptos-stdlib/doc/table.md#0x1_table_borrow">table::borrow</a>(&pool.inactive_shares, pool.observed_lockup_cycle)
 }
 </code></pre>
@@ -1897,7 +1897,7 @@ to ensure there is always only one withdrawal request.
     coins_amount: u64,
 ): u128 {
     // cannot buy inactive shares, only pending_inactive at current lockup cycle
-    <b>let</b> new_shares = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_buy_in">pool_u64::buy_in</a>(<a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool_mut">pending_inactive_shares_pool_mut</a>(pool), shareholder, coins_amount);
+    <b>let</b> new_shares = pool_u64::buy_in(<a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool_mut">pending_inactive_shares_pool_mut</a>(pool), shareholder, coins_amount);
     // never create a new pending withdrawal unless delegator owns some pending_inactive shares
     <b>if</b> (new_shares == 0) { <b>return</b> 0 };
 
@@ -1940,15 +1940,15 @@ to the exact number of shares to redeem in order to achieve this.
 
 
 <pre><code><b>fun</b> <a href="delegation_pool.md#0x1_delegation_pool_amount_to_shares_to_redeem">amount_to_shares_to_redeem</a>(
-    shares_pool: &<a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_Pool">pool_u64::Pool</a>,
+    shares_pool: &pool_u64::Pool,
     shareholder: <b>address</b>,
     coins_amount: u64,
 ): u128 {
-    <b>if</b> (coins_amount &gt;= <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_balance">pool_u64::balance</a>(shares_pool, shareholder)) {
+    <b>if</b> (coins_amount &gt;= pool_u64::balance(shares_pool, shareholder)) {
         // cap result at total shares of shareholder <b>to</b> pass `EINSUFFICIENT_SHARES` on subsequent redeem
-        <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares">pool_u64::shares</a>(shares_pool, shareholder)
+        pool_u64::shares(shares_pool, shareholder)
     } <b>else</b> {
-        <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_amount_to_shares">pool_u64::amount_to_shares</a>(shares_pool, coins_amount)
+        pool_u64::amount_to_shares(shares_pool, coins_amount)
     }
 }
 </code></pre>
@@ -1984,7 +1984,7 @@ be available for withdrawal when current OLC ends.
     <b>let</b> shares_to_redeem = <a href="delegation_pool.md#0x1_delegation_pool_amount_to_shares_to_redeem">amount_to_shares_to_redeem</a>(&pool.active_shares, shareholder, coins_amount);
     // silently exit <b>if</b> not a shareholder otherwise redeem would fail <b>with</b> `ESHAREHOLDER_NOT_FOUND`
     <b>if</b> (shares_to_redeem == 0) <b>return</b> 0;
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_redeem_shares">pool_u64::redeem_shares</a>(&<b>mut</b> pool.active_shares, shareholder, shares_to_redeem)
+    pool_u64::redeem_shares(&<b>mut</b> pool.active_shares, shareholder, shares_to_redeem)
 }
 </code></pre>
 
@@ -2024,18 +2024,18 @@ escape inactivation when current lockup ends.
     // silently exit <b>if</b> not a shareholder otherwise redeem would fail <b>with</b> `ESHAREHOLDER_NOT_FOUND`
     <b>if</b> (shares_to_redeem == 0) <b>return</b> 0;
     // 1. reaching here means delegator owns inactive/pending_inactive shares at OLC `lockup_cycle`
-    <b>let</b> redeemed_coins = <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_redeem_shares">pool_u64::redeem_shares</a>(inactive_shares, shareholder, shares_to_redeem);
+    <b>let</b> redeemed_coins = pool_u64::redeem_shares(inactive_shares, shareholder, shares_to_redeem);
 
     // <b>if</b> entirely reactivated pending_inactive <a href="stake.md#0x1_stake">stake</a> or withdrawn inactive one,
     // re-enable unlocking for delegator by deleting this pending withdrawal
-    <b>if</b> (<a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_shares">pool_u64::shares</a>(inactive_shares, shareholder) == 0) {
+    <b>if</b> (pool_u64::shares(inactive_shares, shareholder) == 0) {
         // 2. a delegator owns inactive/pending_inactive shares only at the OLC of its pending withdrawal
         // 1 & 2: the pending withdrawal itself <b>has</b> been emptied of shares and can be safely deleted
         <a href="../../aptos-stdlib/doc/table.md#0x1_table_remove">table::remove</a>(&<b>mut</b> pool.pending_withdrawals, shareholder);
     };
     // destroy inactive shares pool of past OLC <b>if</b> all its <a href="stake.md#0x1_stake">stake</a> <b>has</b> been withdrawn
     <b>if</b> (lockup_cycle.index &lt; pool.observed_lockup_cycle.index && total_coins(inactive_shares) == 0) {
-        <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_destroy_empty">pool_u64::destroy_empty</a>(<a href="../../aptos-stdlib/doc/table.md#0x1_table_remove">table::remove</a>(&<b>mut</b> pool.inactive_shares, lockup_cycle));
+        pool_u64::destroy_empty(<a href="../../aptos-stdlib/doc/table.md#0x1_table_remove">table::remove</a>(&<b>mut</b> pool.inactive_shares, lockup_cycle));
     };
 
     redeemed_coins
@@ -2162,15 +2162,15 @@ shares pools, assign commission to operator and eventually prepare delegation po
 
     // <b>update</b> total coins accumulated by `active` + `pending_active` shares
     // redeemed `add_stake` fees are restored and distributed <b>to</b> the rest of the pool <b>as</b> rewards
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_update_total_coins">pool_u64::update_total_coins</a>(&<b>mut</b> pool.active_shares, active - commission_active);
+    pool_u64::update_total_coins(&<b>mut</b> pool.active_shares, active - commission_active);
     // <b>update</b> total coins accumulated by `pending_inactive` shares at current observed lockup cycle
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_update_total_coins">pool_u64::update_total_coins</a>(
+    pool_u64::update_total_coins(
         <a href="delegation_pool.md#0x1_delegation_pool_pending_inactive_shares_pool_mut">pending_inactive_shares_pool_mut</a>(pool),
         pending_inactive - commission_pending_inactive
     );
 
     // reward operator its commission out of uncommitted active rewards (`add_stake` fees already excluded)
-    <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_buy_in">pool_u64::buy_in</a>(&<b>mut</b> pool.active_shares, <a href="stake.md#0x1_stake_get_operator">stake::get_operator</a>(pool_address), commission_active);
+    pool_u64::buy_in(&<b>mut</b> pool.active_shares, <a href="stake.md#0x1_stake_get_operator">stake::get_operator</a>(pool_address), commission_active);
     // reward operator its commission out of uncommitted pending_inactive rewards
     <a href="delegation_pool.md#0x1_delegation_pool_buy_in_pending_inactive_shares">buy_in_pending_inactive_shares</a>(pool, <a href="stake.md#0x1_stake_get_operator">stake::get_operator</a>(pool_address), commission_pending_inactive);
 
@@ -2196,7 +2196,7 @@ shares pools, assign commission to operator and eventually prepare delegation po
         <a href="../../aptos-stdlib/doc/table.md#0x1_table_add">table::add</a>(
             &<b>mut</b> pool.inactive_shares,
             pool.observed_lockup_cycle,
-            <a href="../../aptos-stdlib/doc/pool_u64.md#0x1_pool_u64_create_with_scaling_factor">pool_u64::create_with_scaling_factor</a>(<a href="delegation_pool.md#0x1_delegation_pool_SHARES_SCALING_FACTOR">SHARES_SCALING_FACTOR</a>)
+            pool_u64::create_with_scaling_factor(<a href="delegation_pool.md#0x1_delegation_pool_SHARES_SCALING_FACTOR">SHARES_SCALING_FACTOR</a>)
         );
     }
 }

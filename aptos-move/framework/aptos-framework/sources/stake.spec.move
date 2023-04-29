@@ -35,25 +35,25 @@ spec aptos_framework::stake {
         aborts_if exists<ValidatorPerformance>(aptos_addr);
     }
 
-    spec extract_owner_cap(owner: &signer): OwnerCapability {
-        let owner_address = signer::address_of(owner);
-        aborts_if !exists<OwnerCapability>(owner_address);
-    }
+    // spec extract_owner_cap(owner: &signer): OwnerCapability {
+    //     let owner_address = signer::address_of(owner);
+    //     aborts_if !exists<OwnerCapability>(owner_address);
+    // }
 
-    spec deposit_owner_cap(owner: &signer, owner_cap: OwnerCapability) {
-        let owner_address = signer::address_of(owner);
-        aborts_if exists<OwnerCapability>(owner_address);
-    }
+    // spec deposit_owner_cap(owner: &signer, owner_cap: OwnerCapability) {
+    //     let owner_address = signer::address_of(owner);
+    //     aborts_if exists<OwnerCapability>(owner_address);
+    // }
 
-    spec unlock_with_cap(amount: u64, owner_cap: &OwnerCapability) {
-        let pool_address = owner_cap.pool_address;
-        let pre_stake_pool = global<StakePool>(pool_address);
-        let post stake_pool = global<StakePool>(pool_address);
-        modifies global<StakePool>(pool_address);
-        let min_amount = aptos_std::math64::min(amount,pre_stake_pool.active.value);
+    // spec unlock_with_cap(amount: u64, owner_cap: &OwnerCapability) {
+    //     let pool_address = owner_cap.pool_address;
+    //     let pre_stake_pool = global<StakePool>(pool_address);
+    //     let post stake_pool = global<StakePool>(pool_address);
+    //     modifies global<StakePool>(pool_address);
+    //     let min_amount = aptos_std::math64::min(amount,pre_stake_pool.active.value);
 
-        ensures stake_pool.pending_inactive.value == pre_stake_pool.pending_inactive.value + min_amount;
-    }
+    //     ensures stake_pool.pending_inactive.value == pre_stake_pool.pending_inactive.value + min_amount;
+    // }
 
     // Only active validator can update locked_until_secs.
     // spec increase_lockup_with_cap(owner_cap: &OwnerCapability) {
@@ -100,17 +100,17 @@ spec aptos_framework::stake {
         ensures stake_pool.operator_address == new_operator;
     }
 
-    spec reactivate_stake_with_cap(owner_cap: &OwnerCapability, amount: u64) {
-        let pool_address = owner_cap.pool_address;
-        aborts_if !stake_pool_exists(pool_address);
+    // spec reactivate_stake_with_cap(owner_cap: &OwnerCapability, amount: u64) {
+    //     let pool_address = owner_cap.pool_address;
+    //     aborts_if !stake_pool_exists(pool_address);
 
-        let pre_stake_pool = global<StakePool>(pool_address);
-        let post stake_pool = global<StakePool>(pool_address);
-        modifies global<StakePool>(pool_address);
-        let min_amount = aptos_std::math64::min(amount,pre_stake_pool.pending_inactive.value);
+    //     let pre_stake_pool = global<StakePool>(pool_address);
+    //     let post stake_pool = global<StakePool>(pool_address);
+    //     modifies global<StakePool>(pool_address);
+    //     let min_amount = aptos_std::math64::min(amount,pre_stake_pool.pending_inactive.value);
 
-        ensures stake_pool.active.value == pre_stake_pool.active.value + min_amount;
-    }
+    //     ensures stake_pool.active.value == pre_stake_pool.active.value + min_amount;
+    // }
 
     spec rotate_consensus_key(
         operator: &signer,
@@ -125,12 +125,12 @@ spec aptos_framework::stake {
         ensures validator_info.consensus_pubkey == new_consensus_pubkey;
     }
 
-    spec set_delegated_voter_with_cap(owner_cap: &OwnerCapability, new_voter: address) {
-        let pool_address = owner_cap.pool_address;
-        let post stake_pool = global<StakePool>(pool_address);
-        modifies global<StakePool>(pool_address);
-        ensures stake_pool.delegated_voter == new_voter;
-    }
+    // spec set_delegated_voter_with_cap(owner_cap: &OwnerCapability, new_voter: address) {
+    //     let pool_address = owner_cap.pool_address;
+    //     let post stake_pool = global<StakePool>(pool_address);
+    //     modifies global<StakePool>(pool_address);
+    //     ensures stake_pool.delegated_voter == new_voter;
+    // }
 
     spec on_new_epoch {
         pragma disable_invariants_in_body;

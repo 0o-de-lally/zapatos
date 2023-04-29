@@ -236,7 +236,7 @@ module aptos_framework::aptos_governance {
         is_multi_step_proposal: bool,
     ) acquires GovernanceConfig, GovernanceEvents {
         let proposer_address = signer::address_of(proposer);
-        assert!(stake::get_delegated_voter(stake_pool) == proposer_address, error::invalid_argument(ENOT_DELEGATED_VOTER));
+        // assert!(stake::get_delegated_voter(stake_pool) == proposer_address, error::invalid_argument(ENOT_DELEGATED_VOTER));
 
         // The proposer's stake needs to be at least the required bond amount.
         let governance_config = borrow_global<GovernanceConfig>(@aptos_framework);
@@ -302,7 +302,7 @@ module aptos_framework::aptos_governance {
         should_pass: bool,
     ) acquires ApprovedExecutionHashes, GovernanceEvents, VotingRecords {
         let voter_address = signer::address_of(voter);
-        assert!(stake::get_delegated_voter(stake_pool) == voter_address, error::invalid_argument(ENOT_DELEGATED_VOTER));
+        // assert!(stake::get_delegated_voter(stake_pool) == voter_address, error::invalid_argument(ENOT_DELEGATED_VOTER));
 
         // Ensure the voter doesn't double vote with the same stake pool.
         let voting_records = borrow_global_mut<VotingRecords>(@aptos_framework);

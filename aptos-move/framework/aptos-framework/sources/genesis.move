@@ -20,7 +20,7 @@ module aptos_framework::genesis {
     use aptos_framework::gas_schedule;
     use aptos_framework::reconfiguration;
     use aptos_framework::stake;
-    use aptos_framework::staking_contract;
+    // use aptos_framework::staking_contract;
     // use aptos_framework::staking_config;
     use aptos_framework::state_storage;
     use aptos_framework::storage_gas;
@@ -351,18 +351,19 @@ module aptos_framework::genesis {
         create_account(aptos_framework, validator.voter_address, 0);
         print(&20002);
         // Initialize the stake pool and join the validator set.
-        let pool_address = if (use_staking_contract) {
-          print(&2000201);
-            staking_contract::create_staking_contract(
-                owner,
-                validator.operator_address,
-                validator.voter_address,
-                validator.stake_amount,
-                commission_config.commission_percentage,
-                x"",
-            );
-            staking_contract::stake_pool_address(validator.owner_address, validator.operator_address)
-        } else {
+        // let pool_address = if (use_staking_contract) {
+        //   print(&2000201);
+        //     staking_contract::create_staking_contract(
+        //         owner,
+        //         validator.operator_address,
+        //         validator.voter_address,
+        //         validator.stake_amount,
+        //         commission_config.commission_percentage,
+        //         x"",
+        //     );
+        //     staking_contract::stake_pool_address(validator.owner_address, validator.operator_address)
+        // } else
+        let pool_address = {
             print(&2000202);
 
             stake::initialize_stake_owner(
@@ -376,10 +377,8 @@ module aptos_framework::genesis {
         };
         print(&20003);
 
-
         if (commission_config.join_during_genesis) {
-                  print(&20004);
-
+            print(&20004);
             initialize_validator(pool_address, validator);
         };
     }

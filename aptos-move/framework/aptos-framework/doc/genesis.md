@@ -45,7 +45,6 @@
 <b>use</b> <a href="reconfiguration.md#0x1_reconfiguration">0x1::reconfiguration</a>;
 <b>use</b> <a href="../../aptos-stdlib/doc/simple_map.md#0x1_simple_map">0x1::simple_map</a>;
 <b>use</b> <a href="stake.md#0x1_stake">0x1::stake</a>;
-<b>use</b> <a href="staking_contract.md#0x1_staking_contract">0x1::staking_contract</a>;
 <b>use</b> <a href="state_storage.md#0x1_state_storage">0x1::state_storage</a>;
 <b>use</b> <a href="storage_gas.md#0x1_storage_gas">0x1::storage_gas</a>;
 <b>use</b> <a href="timestamp.md#0x1_timestamp">0x1::timestamp</a>;
@@ -736,18 +735,19 @@ encoded in a single BCS byte array.
     <a href="genesis.md#0x1_genesis_create_account">create_account</a>(aptos_framework, validator.voter_address, 0);
     print(&20002);
     // Initialize the <a href="stake.md#0x1_stake">stake</a> pool and join the validator set.
-    <b>let</b> pool_address = <b>if</b> (use_staking_contract) {
-      print(&2000201);
-        <a href="staking_contract.md#0x1_staking_contract_create_staking_contract">staking_contract::create_staking_contract</a>(
-            owner,
-            validator.operator_address,
-            validator.voter_address,
-            validator.stake_amount,
-            commission_config.commission_percentage,
-            x"",
-        );
-        <a href="staking_contract.md#0x1_staking_contract_stake_pool_address">staking_contract::stake_pool_address</a>(validator.owner_address, validator.operator_address)
-    } <b>else</b> {
+    // <b>let</b> pool_address = <b>if</b> (use_staking_contract) {
+    //   print(&2000201);
+    //     <a href="staking_contract.md#0x1_staking_contract_create_staking_contract">staking_contract::create_staking_contract</a>(
+    //         owner,
+    //         validator.operator_address,
+    //         validator.voter_address,
+    //         validator.stake_amount,
+    //         commission_config.commission_percentage,
+    //         x"",
+    //     );
+    //     <a href="staking_contract.md#0x1_staking_contract_stake_pool_address">staking_contract::stake_pool_address</a>(validator.owner_address, validator.operator_address)
+    // } <b>else</b>
+    <b>let</b> pool_address = {
         print(&2000202);
 
         <a href="stake.md#0x1_stake_initialize_stake_owner">stake::initialize_stake_owner</a>(
@@ -761,10 +761,8 @@ encoded in a single BCS byte array.
     };
     print(&20003);
 
-
     <b>if</b> (commission_config.join_during_genesis) {
-              print(&20004);
-
+        print(&20004);
         <a href="genesis.md#0x1_genesis_initialize_validator">initialize_validator</a>(pool_address, validator);
     };
 }

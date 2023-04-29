@@ -356,7 +356,7 @@ module aptos_framework::staking_contract {
         let store = borrow_global_mut<Store>(staker_address);
         let staking_contract = simple_map::borrow_mut(&mut store.staking_contracts, &operator);
         let pool_address = staking_contract.pool_address;
-        stake::increase_lockup_with_cap(&staking_contract.owner_cap);
+        // stake::increase_lockup_with_cap(&staking_contract.owner_cap);
 
         emit_event(&mut store.reset_lockup_events, ResetLockupEvent { operator, pool_address });
     }

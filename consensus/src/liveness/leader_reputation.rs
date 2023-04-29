@@ -597,7 +597,7 @@ impl LeaderReputation {
         // use f64 counter, as total voting power is u128
         let total_voting_power = self.voting_powers.iter().map(|v| *v as f64).sum();
 
-        dbg!(&total_voting_power);
+        // dbg!(&total_voting_power);
 
         CHAIN_HEALTH_TOTAL_VOTING_POWER.set(total_voting_power);
         CHAIN_HEALTH_TOTAL_NUM_VALIDATORS.set(candidates.len() as i64);

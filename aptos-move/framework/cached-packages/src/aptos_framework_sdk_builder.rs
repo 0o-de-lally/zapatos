@@ -515,6 +515,8 @@ pub enum EntryFunctionCall {
         fullnode_addresses: Vec<u8>,
     },
 
+    /// Unlock from active delegation, it's moved to pending_inactive if locked_until_secs < current_time or
+    /// directly inactive if it's not from an active validator.
     /// This can only called by the operator of the validator/staking pool.
     StakeJoinValidatorSet {
         pool_address: AccountAddress,
@@ -2551,6 +2553,8 @@ pub fn stake_initialize_validator(
     ))
 }
 
+/// Unlock from active delegation, it's moved to pending_inactive if locked_until_secs < current_time or
+/// directly inactive if it's not from an active validator.
 /// This can only called by the operator of the validator/staking pool.
 pub fn stake_join_validator_set(pool_address: AccountAddress) -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(

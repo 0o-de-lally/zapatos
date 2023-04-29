@@ -346,7 +346,9 @@ impl BlockStore {
         &self,
         block: Block,
     ) -> anyhow::Result<Arc<ExecutedBlock>> {
-        dbg!(&block.round());
+
+        if block.round() < 1000 { println!("round {}", &block.round()); } //////// 0L ///////
+
         if let Some(existing_block) = self.get_block(block.id()) {
             return Ok(existing_block);
         }

@@ -43,7 +43,7 @@ module aptos_framework::transaction_fee {
         assert!(burn_percentage <= 100, error::out_of_range(EINVALID_BURN_PERCENTAGE));
 
         // Make sure stakng module is aware of transaction fees collection.
-        stake::initialize_validator_fees(aptos_framework);
+        // stake::initialize_validator_fees(aptos_framework);
 
         // Initially, no fees are collected and the block proposer is not set.
         let collected_fees = CollectedFeesPerBlock {
@@ -126,28 +126,29 @@ module aptos_framework::transaction_fee {
 
         // Otherwise get the collected fee, and check if it can distributed later.
         let coin = coin::drain_aggregatable_coin(&mut collected_fees.amount);
-        if (option::is_some(&collected_fees.proposer)) {
-            // Extract the address of proposer here and reset it to option::none(). This
-            // is particularly useful to avoid any undesired side-effects where coins are
-            // collected but never distributed or distributed to the wrong account.
-            // With this design, processing collected fees enforces that all fees will be burnt
-            // unless the proposer is specified in the block prologue. When we have a governance
-            // proposal that triggers reconfiguration, we distribute pending fees and burn the
-            // fee for the proposal. Otherwise, that fee would be leaked to the next block.
-            let proposer = option::extract(&mut collected_fees.proposer);
+        // if (option::is_some(&collected_fees.proposer)) {
+        //     // Extract the address of proposer here and reset it to option::none(). This
+        //     // is particularly useful to avoid any undesired side-effects where coins are
+        //     // collected but never distributed or distributed to the wrong account.
+        //     // With this design, processing collected fees enforces that all fees will be burnt
+        //     // unless the proposer is specified in the block prologue. When we have a governance
+        //     // proposal that triggers reconfiguration, we distribute pending fees and burn the
+        //     // fee for the proposal. Otherwise, that fee would be leaked to the next block.
+        //     let proposer = option::extract(&mut collected_fees.proposer);
 
-            // Since the block can be produced by the VM itself, we have to make sure we catch
-            // this case.
-            if (proposer == @vm_reserved) {
-                burn_coin_fraction(&mut coin, 100);
-                coin::destroy_zero(coin);
-                return
-            };
+        //     // Since the block can be produced by the VM itself, we have to make sure we catch
+        //     // this case.
+        //     if (proposer == @vm_reserved) {
+        //         burn_coin_fraction(&mut coin, 100);
+        //         coin::destroy_zero(coin);
+        //         return
+        //     };
 
-            burn_coin_fraction(&mut coin, collected_fees.burn_percentage);
-            stake::add_transaction_fee(proposer, coin);
-            return
-        };
+        //     burn_coin_fraction(&mut coin, collected_fees.burn_percentage);
+        //     // coin::burn()
+        //     // stake::add_transaction_fee(proposer, coin);
+        //     return
+        // };
 
         // If checks did not pass, simply burn all collected coins and return none.
         burn_coin_fraction(&mut coin, 100);

@@ -65,7 +65,6 @@
     -  [Function `remove_approved_hash`](#@Specification_1_remove_approved_hash)
     -  [Function `reconfigure`](#@Specification_1_reconfigure)
     -  [Function `get_signer_testnet_only`](#@Specification_1_get_signer_testnet_only)
-    -  [Function `get_voting_power`](#@Specification_1_get_voting_power)
     -  [Function `get_signer`](#@Specification_1_get_signer)
     -  [Function `create_proposal_metadata`](#@Specification_1_create_proposal_metadata)
     -  [Function `initialize_for_verification`](#@Specification_1_initialize_for_verification)
@@ -1200,7 +1199,7 @@ Only called in testnet where the core resources account exists and has been gran
 Return the voting power a stake pool has with respect to governance proposals.
 
 
-<pre><code><b>fun</b> <a href="aptos_governance.md#0x1_aptos_governance_get_voting_power">get_voting_power</a>(pool_address: <b>address</b>): u64
+<pre><code><b>fun</b> <a href="aptos_governance.md#0x1_aptos_governance_get_voting_power">get_voting_power</a>(_pool_address: <b>address</b>): u64
 </code></pre>
 
 
@@ -1209,7 +1208,7 @@ Return the voting power a stake pool has with respect to governance proposals.
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="aptos_governance.md#0x1_aptos_governance_get_voting_power">get_voting_power</a>(pool_address: <b>address</b>): u64 {
+<pre><code><b>fun</b> <a href="aptos_governance.md#0x1_aptos_governance_get_voting_power">get_voting_power</a>(_pool_address: <b>address</b>): u64 {
     // <b>let</b> allow_validator_set_change = <a href="staking_config.md#0x1_staking_config_get_allow_validator_set_change">staking_config::get_allow_validator_set_change</a>(&<a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>());
     // <b>if</b> (allow_validator_set_change) {
     //     <b>let</b> (active, _, pending_active, pending_inactive) = stake::get_stake(pool_address);
@@ -1736,33 +1735,6 @@ Address @aptos_framework must exist GovernanceResponsbility.
 
 
 
-<a name="@Specification_1_get_voting_power"></a>
-
-### Function `get_voting_power`
-
-
-<pre><code><b>fun</b> <a href="aptos_governance.md#0x1_aptos_governance_get_voting_power">get_voting_power</a>(pool_address: <b>address</b>): u64
-</code></pre>
-
-
-Address @aptos_framework must exist StakingConfig.
-limit addition overflow.
-pool_address must exist in StakePool.
-
-
-<pre><code><b>pragma</b> aborts_if_is_partial;
-<b>let</b> <a href="staking_config.md#0x1_staking_config">staking_config</a> = <b>global</b>&lt;<a href="staking_config.md#0x1_staking_config_StakingConfig">staking_config::StakingConfig</a>&gt;(@aptos_framework);
-<b>aborts_if</b> !<b>exists</b>&lt;<a href="staking_config.md#0x1_staking_config_StakingConfig">staking_config::StakingConfig</a>&gt;(@aptos_framework);
-<b>let</b> allow_validator_set_change = <a href="staking_config.md#0x1_staking_config">staking_config</a>.allow_validator_set_change;
-<b>let</b> stake_pool = <b>global</b>&lt;<a href="stake.md#0x1_stake_StakePool">stake::StakePool</a>&gt;(pool_address);
-<b>aborts_if</b> allow_validator_set_change && (stake_pool.active.value + stake_pool.pending_active.value + stake_pool.pending_inactive.value) &gt; MAX_U64;
-<b>aborts_if</b> !<b>exists</b>&lt;<a href="stake.md#0x1_stake_StakePool">stake::StakePool</a>&gt;(pool_address);
-<b>aborts_if</b> !allow_validator_set_change && !<b>exists</b>&lt;<a href="stake.md#0x1_stake_ValidatorSet">stake::ValidatorSet</a>&gt;(@aptos_framework);
-<b>ensures</b> allow_validator_set_change ==&gt; result == stake_pool.active.value + stake_pool.pending_active.value + stake_pool.pending_inactive.value;
-</code></pre>
-
-
-
 <a name="@Specification_1_get_signer"></a>
 
 ### Function `get_signer`
@@ -1772,6 +1744,9 @@ pool_address must exist in StakePool.
 </code></pre>
 
 
+Address @aptos_framework must exist StakingConfig.
+limit addition overflow.
+pool_address must exist in StakePool.
 
 
 <pre><code><b>include</b> <a href="aptos_governance.md#0x1_aptos_governance_GetSignerAbortsIf">GetSignerAbortsIf</a>;

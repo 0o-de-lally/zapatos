@@ -1,9 +1,9 @@
 module aptos_framework::genesis {
     use std::error;
-    use std::fixed_point32;
+    // use std::fixed_point32;
     use std::vector;
 
-    use aptos_std::simple_map;
+    // use aptos_std::simple_map;
     use aptos_std::debug::print;
 
     use aptos_framework::account;
@@ -71,13 +71,13 @@ module aptos_framework::genesis {
         consensus_config: vector<u8>,
         execution_config: vector<u8>,
         epoch_interval_microsecs: u64,
-        minimum_stake: u64,
-        maximum_stake: u64,
-        recurring_lockup_duration_secs: u64,
-        allow_validator_set_change: bool,
-        rewards_rate: u64,
-        rewards_rate_denominator: u64,
-        voting_power_increase_limit: u64,
+        _minimum_stake: u64,
+        _maximum_stake: u64,
+        _recurring_lockup_duration_secs: u64,
+        _allow_validator_set_change: bool,
+        _rewards_rate: u64,
+        _rewards_rate_denominator: u64,
+        _voting_power_increase_limit: u64,
     ) {
         // Initialize the aptos framework account. This is the account where system resources and modules will be
         // deployed to. This will be entirely managed by on-chain governance and no entities have the key or privileges
@@ -342,7 +342,7 @@ module aptos_framework::genesis {
     fun create_initialize_validator(
         aptos_framework: &signer,
         commission_config: &ValidatorConfigurationWithCommission,
-        use_staking_contract: bool,
+        _use_staking_contract: bool,
     ) {
         let validator = &commission_config.validator_config;
         print(&20001);
@@ -432,9 +432,9 @@ module aptos_framework::genesis {
         required_proposer_stake: u64,
         voting_duration_secs: u64,
         accounts: vector<AccountMap>,
-        employee_vesting_start: u64,
-        employee_vesting_period_duration: u64,
-        employees: vector<EmployeeAccountMap>,
+        _employee_vesting_start: u64,
+        _employee_vesting_period_duration: u64,
+        _employees: vector<EmployeeAccountMap>,
         validators: vector<ValidatorConfigurationWithCommission>
     ) {
         initialize(

@@ -431,7 +431,7 @@ module aptos_framework::aptos_governance {
     }
 
     /// Return the voting power a stake pool has with respect to governance proposals.
-    fun get_voting_power(pool_address: address): u64 {
+    fun get_voting_power(_pool_address: address): u64 {
         // let allow_validator_set_change = staking_config::get_allow_validator_set_change(&staking_config::get());
         // if (allow_validator_set_change) {
         //     let (active, _, pending_active, pending_inactive) = stake::get_stake(pool_address);

@@ -259,9 +259,9 @@ spec aptos_framework::stake {
         include ResourceRequirement;
     }
 
-    spec add_transaction_fee(validator_addr: address, fee: Coin<AptosCoin>) {
-        aborts_if !exists<ValidatorFees>(@aptos_framework);
-    }
+    // spec add_transaction_fee(validator_addr: address, fee: Coin<AptosCoin>) {
+    //     aborts_if !exists<ValidatorFees>(@aptos_framework);
+    // }
 
     spec update_voting_power_increase(increase_amount: u64) {
         let aptos = @aptos_framework;

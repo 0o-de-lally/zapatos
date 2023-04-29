@@ -274,23 +274,23 @@ spec aptos_framework::aptos_governance {
     /// Address @aptos_framework must exist StakingConfig.
     /// limit addition overflow.
     /// pool_address must exist in StakePool.
-    spec get_voting_power(pool_address: address): u64 {
-        // TODO: `stake::get_current_epoch_voting_power` is called in the function,
-        // the call level is very deep, and `stake::get_stake` has multiple return values,
-        // and multiple return values cannot be obtained in the spec,
-        // so the overflow aborts_if of active + pending_active + pending_inactive cannot be written.
-        pragma aborts_if_is_partial;
+    // spec get_voting_power(pool_address: address): u64 {
+    //     // TODO: `stake::get_current_epoch_voting_power` is called in the function,
+    //     // the call level is very deep, and `stake::get_stake` has multiple return values,
+    //     // and multiple return values cannot be obtained in the spec,
+    //     // so the overflow aborts_if of active + pending_active + pending_inactive cannot be written.
+    //     pragma aborts_if_is_partial;
 
-        let staking_config = global<staking_config::StakingConfig>(@aptos_framework);
-        aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
-        let allow_validator_set_change = staking_config.allow_validator_set_change;
-        let stake_pool = global<stake::StakePool>(pool_address);
-        aborts_if allow_validator_set_change && (stake_pool.active.value + stake_pool.pending_active.value + stake_pool.pending_inactive.value) > MAX_U64;
-        aborts_if !exists<stake::StakePool>(pool_address);
-        aborts_if !allow_validator_set_change && !exists<stake::ValidatorSet>(@aptos_framework);
+    //     let staking_config = global<staking_config::StakingConfig>(@aptos_framework);
+    //     aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
+    //     let allow_validator_set_change = staking_config.allow_validator_set_change;
+    //     let stake_pool = global<stake::StakePool>(pool_address);
+    //     aborts_if allow_validator_set_change && (stake_pool.active.value + stake_pool.pending_active.value + stake_pool.pending_inactive.value) > MAX_U64;
+    //     aborts_if !exists<stake::StakePool>(pool_address);
+    //     aborts_if !allow_validator_set_change && !exists<stake::ValidatorSet>(@aptos_framework);
 
-        ensures allow_validator_set_change ==> result == stake_pool.active.value + stake_pool.pending_active.value + stake_pool.pending_inactive.value;
-    }
+    //     ensures allow_validator_set_change ==> result == stake_pool.active.value + stake_pool.pending_active.value + stake_pool.pending_inactive.value;
+    // }
 
     spec get_signer(signer_address: address): signer {
         include GetSignerAbortsIf;

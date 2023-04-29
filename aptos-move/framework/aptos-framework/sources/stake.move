@@ -268,27 +268,27 @@ module aptos_framework::stake {
         fees_table: Table<address, Coin<AptosCoin>>,
     }
 
-    /// Initializes the resource storing information about collected transaction fees per validator.
-    /// Used by `transaction_fee.move` to initialize fee collection and distribution.
-    public(friend) fun initialize_validator_fees(aptos_framework: &signer) {
-        system_addresses::assert_aptos_framework(aptos_framework);
-        assert!(
-            !exists<ValidatorFees>(@aptos_framework),
-            error::already_exists(EFEES_TABLE_ALREADY_EXISTS)
-        );
-        move_to(aptos_framework, ValidatorFees { fees_table: table::new() });
-    }
+    // /// Initializes the resource storing information about collected transaction fees per validator.
+    // /// Used by `transaction_fee.move` to initialize fee collection and distribution.
+    // public(friend) fun initialize_validator_fees(aptos_framework: &signer) {
+    //     system_addresses::assert_aptos_framework(aptos_framework);
+    //     assert!(
+    //         !exists<ValidatorFees>(@aptos_framework),
+    //         error::already_exists(EFEES_TABLE_ALREADY_EXISTS)
+    //     );
+    //     move_to(aptos_framework, ValidatorFees { fees_table: table::new() });
+    // }
 
-    /// Stores the transaction fee collected to the specified validator address.
-    public(friend) fun add_transaction_fee(validator_addr: address, fee: Coin<AptosCoin>) acquires ValidatorFees {
-        let fees_table = &mut borrow_global_mut<ValidatorFees>(@aptos_framework).fees_table;
-        if (table::contains(fees_table, validator_addr)) {
-            let collected_fee = table::borrow_mut(fees_table, validator_addr);
-            coin::merge(collected_fee, fee);
-        } else {
-            table::add(fees_table, validator_addr, fee);
-        }
-    }
+    // /// Stores the transaction fee collected to the specified validator address.
+    // public(friend) fun add_transaction_fee(validator_addr: address, fee: Coin<AptosCoin>) acquires ValidatorFees {
+    //     let fees_table = &mut borrow_global_mut<ValidatorFees>(@aptos_framework).fees_table;
+    //     if (table::contains(fees_table, validator_addr)) {
+    //         let collected_fee = table::borrow_mut(fees_table, validator_addr);
+    //         coin::merge(collected_fee, fee);
+    //     } else {
+    //         table::add(fees_table, validator_addr, fee);
+    //     }
+    // }
 
     #[view]
     /// Return the lockup expiration of the stake pool at `pool_address`.
@@ -298,18 +298,18 @@ module aptos_framework::stake {
         borrow_global<StakePool>(pool_address).locked_until_secs
     }
 
-    #[view]
-    /// Return the remaining lockup of the stake pool at `pool_address`.
-    /// This will throw an error if there's no stake pool at `pool_address`.
-    public fun get_remaining_lockup_secs(pool_address: address): u64 acquires StakePool {
-        assert_stake_pool_exists(pool_address);
-        let lockup_time = borrow_global<StakePool>(pool_address).locked_until_secs;
-        if (lockup_time <= timestamp::now_seconds()) {
-            0
-        } else {
-            lockup_time - timestamp::now_seconds()
-        }
-    }
+    // #[view]
+    // /// Return the remaining lockup of the stake pool at `pool_address`.
+    // /// This will throw an error if there's no stake pool at `pool_address`.
+    // public fun get_remaining_lockup_secs(pool_address: address): u64 acquires StakePool {
+    //     assert_stake_pool_exists(pool_address);
+    //     let lockup_time = borrow_global<StakePool>(pool_address).locked_until_secs;
+    //     if (lockup_time <= timestamp::now_seconds()) {
+    //         0
+    //     } else {
+    //         lockup_time - timestamp::now_seconds()
+    //     }
+    // }
 
     // #[view]
     // /// Return the different stake amounts for `pool_address` (whether the validator is active or not).
@@ -469,7 +469,7 @@ module aptos_framework::stake {
         initial_stake_amount: u64,
         operator: address,
         voter: address,
-    ) acquires AllowedValidators, OwnerCapability, StakePool, ValidatorSet {
+    ) acquires AllowedValidators, OwnerCapability, StakePool {
         initialize_owner(owner);
         move_to(owner, ValidatorConfig {
             consensus_pubkey: vector::empty(),
@@ -479,7 +479,7 @@ module aptos_framework::stake {
         });
 
         if (initial_stake_amount > 0) {
-            add_stake(owner, initial_stake_amount);
+            // add_stake(owner, initial_stake_amount);
         };
 
         let account_address = signer::address_of(owner);
@@ -759,7 +759,7 @@ module aptos_framework::stake {
     public entry fun increase_lockup(owner: &signer) acquires OwnerCapability,  {
         let owner_address = signer::address_of(owner);
         assert_owner_cap_exists(owner_address);
-        let ownership_cap = borrow_global<OwnerCapability>(owner_address);
+        let _ownership_cap = borrow_global<OwnerCapability>(owner_address);
         // increase_lockup_with_cap(ownership_cap);
     }
 

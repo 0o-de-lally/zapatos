@@ -311,19 +311,19 @@ module aptos_framework::stake {
         }
     }
 
-    #[view]
-    /// Return the different stake amounts for `pool_address` (whether the validator is active or not).
-    /// The returned amounts are for (active, inactive, pending_active, pending_inactive) stake respectively.
-    public fun get_stake(pool_address: address): (u64, u64, u64, u64) acquires StakePool {
-        assert_stake_pool_exists(pool_address);
-        let stake_pool = borrow_global<StakePool>(pool_address);
-        (
-            coin::value(&stake_pool.active),
-            coin::value(&stake_pool.inactive),
-            coin::value(&stake_pool.pending_active),
-            coin::value(&stake_pool.pending_inactive),
-        )
-    }
+    // #[view]
+    // /// Return the different stake amounts for `pool_address` (whether the validator is active or not).
+    // /// The returned amounts are for (active, inactive, pending_active, pending_inactive) stake respectively.
+    // public fun get_stake(pool_address: address): (u64, u64, u64, u64) acquires StakePool {
+    //     assert_stake_pool_exists(pool_address);
+    //     let stake_pool = borrow_global<StakePool>(pool_address);
+    //     (
+    //         coin::value(&stake_pool.active),
+    //         coin::value(&stake_pool.inactive),
+    //         coin::value(&stake_pool.pending_active),
+    //         coin::value(&stake_pool.pending_inactive),
+    //     )
+    // }
 
     #[view]
     /// Returns the validator's state.

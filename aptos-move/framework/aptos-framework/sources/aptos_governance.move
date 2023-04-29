@@ -432,16 +432,17 @@ module aptos_framework::aptos_governance {
 
     /// Return the voting power a stake pool has with respect to governance proposals.
     fun get_voting_power(pool_address: address): u64 {
-        let allow_validator_set_change = staking_config::get_allow_validator_set_change(&staking_config::get());
-        if (allow_validator_set_change) {
-            let (active, _, pending_active, pending_inactive) = stake::get_stake(pool_address);
-            // We calculate the voting power as total non-inactive stakes of the pool. Even if the validator is not in the
-            // active validator set, as long as they have a lockup (separately checked in create_proposal and voting), their
-            // stake would still count in their voting power for governance proposals.
-            active + pending_active + pending_inactive
-        } else {
-            stake::get_current_epoch_voting_power(pool_address)
-        }
+        // let allow_validator_set_change = staking_config::get_allow_validator_set_change(&staking_config::get());
+        // if (allow_validator_set_change) {
+        //     let (active, _, pending_active, pending_inactive) = stake::get_stake(pool_address);
+        //     // We calculate the voting power as total non-inactive stakes of the pool. Even if the validator is not in the
+        //     // active validator set, as long as they have a lockup (separately checked in create_proposal and voting), their
+        //     // stake would still count in their voting power for governance proposals.
+        //     active + pending_active + pending_inactive
+        // } else {
+        //     stake::get_current_epoch_voting_power(pool_address)
+        // }
+        1
     }
 
     /// Return a signer for making changes to 0x1 as part of on-chain governance proposal process.

@@ -51,7 +51,6 @@
 -  [Function `add_transaction_fee`](#0x1_stake_add_transaction_fee)
 -  [Function `get_lockup_secs`](#0x1_stake_get_lockup_secs)
 -  [Function `get_remaining_lockup_secs`](#0x1_stake_get_remaining_lockup_secs)
--  [Function `get_stake`](#0x1_stake_get_stake)
 -  [Function `get_validator_state`](#0x1_stake_get_validator_state)
 -  [Function `get_current_epoch_voting_power`](#0x1_stake_get_current_epoch_voting_power)
 -  [Function `get_delegated_voter`](#0x1_stake_get_delegated_voter)
@@ -1413,39 +1412,6 @@ This will throw an error if there's no stake pool at <code>pool_address</code>.
     } <b>else</b> {
         lockup_time - <a href="timestamp.md#0x1_timestamp_now_seconds">timestamp::now_seconds</a>()
     }
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x1_stake_get_stake"></a>
-
-## Function `get_stake`
-
-Return the different stake amounts for <code>pool_address</code> (whether the validator is active or not).
-The returned amounts are for (active, inactive, pending_active, pending_inactive) stake respectively.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_get_stake">get_stake</a>(pool_address: <b>address</b>): (u64, u64, u64, u64)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_get_stake">get_stake</a>(pool_address: <b>address</b>): (u64, u64, u64, u64) <b>acquires</b> <a href="stake.md#0x1_stake_StakePool">StakePool</a> {
-    <a href="stake.md#0x1_stake_assert_stake_pool_exists">assert_stake_pool_exists</a>(pool_address);
-    <b>let</b> stake_pool = <b>borrow_global</b>&lt;<a href="stake.md#0x1_stake_StakePool">StakePool</a>&gt;(pool_address);
-    (
-        <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.active),
-        <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.inactive),
-        <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.pending_active),
-        <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.pending_inactive),
-    )
 }
 </code></pre>
 

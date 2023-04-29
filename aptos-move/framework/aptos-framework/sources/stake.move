@@ -290,13 +290,13 @@ module aptos_framework::stake {
     //     }
     // }
 
-    #[view]
-    /// Return the lockup expiration of the stake pool at `pool_address`.
-    /// This will throw an error if there's no stake pool at `pool_address`.
-    public fun get_lockup_secs(pool_address: address): u64 acquires StakePool {
-        assert_stake_pool_exists(pool_address);
-        borrow_global<StakePool>(pool_address).locked_until_secs
-    }
+    // #[view]
+    // /// Return the lockup expiration of the stake pool at `pool_address`.
+    // /// This will throw an error if there's no stake pool at `pool_address`.
+    // public fun get_lockup_secs(pool_address: address): u64 acquires StakePool {
+    //     assert_stake_pool_exists(pool_address);
+    //     borrow_global<StakePool>(pool_address).locked_until_secs
+    // }
 
     // #[view]
     // /// Return the remaining lockup of the stake pool at `pool_address`.
@@ -1120,7 +1120,7 @@ module aptos_framework::stake {
 
         // Update validator indices, reset performance scores, and renew lockups.
         validator_perf.validators = vector::empty();
-        let recurring_lockup_duration_secs = 0;
+        // let recurring_lockup_duration_secs = 0;
         //staking_config::get_recurring_lockup_duration(&config);
 
 
@@ -1152,16 +1152,16 @@ module aptos_framework::stake {
                 failed_proposals: 0,
             });
 
-            // Automatically renew a validator's lockup for validators that will still be in the validator set in the
-            // next epoch.
-            let stake_pool = borrow_global_mut<StakePool>(validator_info.addr);
-            if (stake_pool.locked_until_secs <= timestamp::now_seconds()) {
-                spec {
-                    assume timestamp::spec_now_seconds() + recurring_lockup_duration_secs <= MAX_U64;
-                };
-                stake_pool.locked_until_secs =
-                    timestamp::now_seconds() + recurring_lockup_duration_secs;
-            };
+            // // Automatically renew a validator's lockup for validators that will still be in the validator set in the
+            // // next epoch.
+            // let stake_pool = borrow_global_mut<StakePool>(validator_info.addr);
+            // if (stake_pool.locked_until_secs <= timestamp::now_seconds()) {
+            //     spec {
+            //         assume timestamp::spec_now_seconds() + recurring_lockup_duration_secs <= MAX_U64;
+            //     };
+            //     stake_pool.locked_until_secs =
+            //         timestamp::now_seconds() + recurring_lockup_duration_secs;
+            // };
 
             validator_index = validator_index + 1;
         };

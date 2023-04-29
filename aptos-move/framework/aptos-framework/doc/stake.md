@@ -47,7 +47,6 @@
 -  [Resource `ValidatorFees`](#0x1_stake_ValidatorFees)
 -  [Resource `AllowedValidators`](#0x1_stake_AllowedValidators)
 -  [Constants](#@Constants_0)
--  [Function `get_lockup_secs`](#0x1_stake_get_lockup_secs)
 -  [Function `get_validator_state`](#0x1_stake_get_validator_state)
 -  [Function `get_current_epoch_voting_power`](#0x1_stake_get_current_epoch_voting_power)
 -  [Function `get_operator`](#0x1_stake_get_operator)
@@ -1275,33 +1274,6 @@ Validator status enum. We can switch to proper enum later once Move supports it.
 
 
 
-<a name="0x1_stake_get_lockup_secs"></a>
-
-## Function `get_lockup_secs`
-
-Return the lockup expiration of the stake pool at <code>pool_address</code>.
-This will throw an error if there's no stake pool at <code>pool_address</code>.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_get_lockup_secs">get_lockup_secs</a>(pool_address: <b>address</b>): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_get_lockup_secs">get_lockup_secs</a>(pool_address: <b>address</b>): u64 <b>acquires</b> <a href="stake.md#0x1_stake_StakePool">StakePool</a> {
-    <a href="stake.md#0x1_stake_assert_stake_pool_exists">assert_stake_pool_exists</a>(pool_address);
-    <b>borrow_global</b>&lt;<a href="stake.md#0x1_stake_StakePool">StakePool</a>&gt;(pool_address).locked_until_secs
-}
-</code></pre>
-
-
-
-</details>
-
 <a name="0x1_stake_get_validator_state"></a>
 
 ## Function `get_validator_state`
@@ -2426,7 +2398,7 @@ power.
 
     // Update validator indices, reset performance scores, and renew lockups.
     validator_perf.validators = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_empty">vector::empty</a>();
-    <b>let</b> recurring_lockup_duration_secs = 0;
+    // <b>let</b> recurring_lockup_duration_secs = 0;
     //<a href="staking_config.md#0x1_staking_config_get_recurring_lockup_duration">staking_config::get_recurring_lockup_duration</a>(&config);
 
 
@@ -2458,16 +2430,16 @@ power.
             failed_proposals: 0,
         });
 
-        // Automatically renew a validator's lockup for validators that will still be in the validator set in the
-        // next epoch.
-        <b>let</b> stake_pool = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_StakePool">StakePool</a>&gt;(validator_info.addr);
-        <b>if</b> (stake_pool.locked_until_secs &lt;= <a href="timestamp.md#0x1_timestamp_now_seconds">timestamp::now_seconds</a>()) {
-            <b>spec</b> {
-                <b>assume</b> <a href="timestamp.md#0x1_timestamp_spec_now_seconds">timestamp::spec_now_seconds</a>() + recurring_lockup_duration_secs &lt;= <a href="stake.md#0x1_stake_MAX_U64">MAX_U64</a>;
-            };
-            stake_pool.locked_until_secs =
-                <a href="timestamp.md#0x1_timestamp_now_seconds">timestamp::now_seconds</a>() + recurring_lockup_duration_secs;
-        };
+        // // Automatically renew a validator's lockup for validators that will still be in the validator set in the
+        // // next epoch.
+        // <b>let</b> stake_pool = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_StakePool">StakePool</a>&gt;(validator_info.addr);
+        // <b>if</b> (stake_pool.locked_until_secs &lt;= <a href="timestamp.md#0x1_timestamp_now_seconds">timestamp::now_seconds</a>()) {
+        //     <b>spec</b> {
+        //         <b>assume</b> <a href="timestamp.md#0x1_timestamp_spec_now_seconds">timestamp::spec_now_seconds</a>() + recurring_lockup_duration_secs &lt;= <a href="stake.md#0x1_stake_MAX_U64">MAX_U64</a>;
+        //     };
+        //     stake_pool.locked_until_secs =
+        //         <a href="timestamp.md#0x1_timestamp_now_seconds">timestamp::now_seconds</a>() + recurring_lockup_duration_secs;
+        // };
 
         validator_index = validator_index + 1;
     };

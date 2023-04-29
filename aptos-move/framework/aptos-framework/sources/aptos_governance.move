@@ -249,10 +249,10 @@ module aptos_framework::aptos_governance {
         // The proposer's stake needs to be locked up at least as long as the proposal's voting period.
         let current_time = timestamp::now_seconds();
         let proposal_expiration = current_time + governance_config.voting_duration_secs;
-        assert!(
-            stake::get_lockup_secs(stake_pool) >= proposal_expiration,
-            error::invalid_argument(EINSUFFICIENT_STAKE_LOCKUP),
-        );
+        // assert!(
+        //     stake::get_lockup_secs(stake_pool) >= proposal_expiration,
+        //     error::invalid_argument(EINSUFFICIENT_STAKE_LOCKUP),
+        // );
 
         // Create and validate proposal metadata.
         let proposal_metadata = create_proposal_metadata(metadata_location, metadata_hash);
@@ -320,11 +320,11 @@ module aptos_framework::aptos_governance {
         assert!(voting_power > 0, error::invalid_argument(ENO_VOTING_POWER));
 
         // The voter's stake needs to be locked up at least as long as the proposal's expiration.
-        let proposal_expiration = voting::get_proposal_expiration_secs<GovernanceProposal>(@aptos_framework, proposal_id);
-        assert!(
-            stake::get_lockup_secs(stake_pool) >= proposal_expiration,
-            error::invalid_argument(EINSUFFICIENT_STAKE_LOCKUP),
-        );
+        // let proposal_expiration = voting::get_proposal_expiration_secs<GovernanceProposal>(@aptos_framework, proposal_id);
+        // assert!(
+        //     stake::get_lockup_secs(stake_pool) >= proposal_expiration,
+        //     error::invalid_argument(EINSUFFICIENT_STAKE_LOCKUP),
+        // );
 
         voting::vote<GovernanceProposal>(
             &governance_proposal::create_empty_proposal(),

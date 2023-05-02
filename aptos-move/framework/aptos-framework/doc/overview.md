@@ -39,7 +39,6 @@ This is the reference documentation of the Aptos framework.
 -  [`0x1::reconfiguration`](reconfiguration.md#0x1_reconfiguration)
 -  [`0x1::resource_account`](resource_account.md#0x1_resource_account)
 -  [`0x1::stake`](stake.md#0x1_stake)
--  [`0x1::staking_config`](staking_config.md#0x1_staking_config)
 -  [`0x1::state_storage`](state_storage.md#0x1_state_storage)
 -  [`0x1::storage_gas`](storage_gas.md#0x1_storage_gas)
 -  [`0x1::system_addresses`](system_addresses.md#0x1_system_addresses)

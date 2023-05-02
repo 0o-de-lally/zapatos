@@ -1026,16 +1026,6 @@ security of the testnet. This will NOT be enabled in Mainnet.
 
 
 
-<a name="0x1_stake_MAX_REWARDS_RATE"></a>
-
-Limit the maximum value of <code>rewards_rate</code> in order to avoid any arithmetic overflow.
-
-
-<pre><code><b>const</b> <a href="stake.md#0x1_stake_MAX_REWARDS_RATE">MAX_REWARDS_RATE</a>: u64 = 1000000;
-</code></pre>
-
-
-
 <a name="0x1_stake_EALREADY_ACTIVE_VALIDATOR"></a>
 
 Account is already a validator or pending validator.
@@ -1222,6 +1212,16 @@ Voting power increase has exceeded the limit for this current epoch.
 
 
 <pre><code><b>const</b> <a href="stake.md#0x1_stake_EVOTING_POWER_INCREASE_EXCEEDS_LIMIT">EVOTING_POWER_INCREASE_EXCEEDS_LIMIT</a>: u64 = 13;
+</code></pre>
+
+
+
+<a name="0x1_stake_MAX_REWARDS_RATE"></a>
+
+Limit the maximum value of <code>rewards_rate</code> in order to avoid any arithmetic overflow.
+
+
+<pre><code><b>const</b> <a href="stake.md#0x1_stake_MAX_REWARDS_RATE">MAX_REWARDS_RATE</a>: u64 = 1000000;
 </code></pre>
 
 
@@ -1900,7 +1900,7 @@ Add <code>coins</code> into <code>pool_address</code>. this requires the corresp
         <a href="coin.md#0x1_coin_merge">coin::merge</a>&lt;AptosCoin&gt;(&<b>mut</b> stake_pool.active, coins);
     };
 
-    // <b>let</b> (_, maximum_stake) = <a href="staking_config.md#0x1_staking_config_get_required_stake">staking_config::get_required_stake</a>(&<a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>());
+    // <b>let</b> (_, maximum_stake) = staking_config::get_required_stake(&staking_config::get());
     <b>let</b> maximum_stake = 1000;
 
     <b>let</b> voting_power = <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool);
@@ -2046,7 +2046,7 @@ This can only called by the operator of the validator/staking pool.
     pool_address: <b>address</b>
 ) <b>acquires</b> <a href="stake.md#0x1_stake_StakePool">StakePool</a>, <a href="stake.md#0x1_stake_ValidatorConfig">ValidatorConfig</a>, <a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a> {
     // <b>assert</b>!(
-    //     <a href="staking_config.md#0x1_staking_config_get_allow_validator_set_change">staking_config::get_allow_validator_set_change</a>(&<a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>()),
+    //     staking_config::get_allow_validator_set_change(&staking_config::get()),
     //     <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="stake.md#0x1_stake_ENO_POST_GENESIS_VALIDATOR_SET_CHANGE_ALLOWED">ENO_POST_GENESIS_VALIDATOR_SET_CHANGE_ALLOWED</a>),
     // );
 
@@ -2095,8 +2095,8 @@ This internal version can only be called by the Genesis module during Genesis.
     );
     print(&40002);
 
-    // <b>let</b> config = <a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>();
-    // <b>let</b> (minimum_stake, maximum_stake) = <a href="staking_config.md#0x1_staking_config_get_required_stake">staking_config::get_required_stake</a>(&config);
+    // <b>let</b> config = staking_config::get();
+    // <b>let</b> (minimum_stake, maximum_stake) = staking_config::get_required_stake(&config);
     <b>let</b> minimum_stake = 1;
     <b>let</b> maximum_stake = 100;
     <b>let</b> voting_power = <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool);
@@ -2156,9 +2156,9 @@ Can only be called by the operator of the validator/staking pool.
     operator: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>,
     pool_address: <b>address</b>
 ) <b>acquires</b> <a href="stake.md#0x1_stake_StakePool">StakePool</a>, <a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a> {
-    // <b>let</b> config = <a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>();
+    // <b>let</b> config = staking_config::get();
     // <b>assert</b>!(
-    //     <a href="staking_config.md#0x1_staking_config_get_allow_validator_set_change">staking_config::get_allow_validator_set_change</a>(&config),
+    //     staking_config::get_allow_validator_set_change(&config),
     //     <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="stake.md#0x1_stake_ENO_POST_GENESIS_VALIDATOR_SET_CHANGE_ALLOWED">ENO_POST_GENESIS_VALIDATOR_SET_CHANGE_ALLOWED</a>),
     // );
 
@@ -2327,7 +2327,7 @@ power.
 
 <pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="stake.md#0x1_stake_on_new_epoch">on_new_epoch</a>() <b>acquires</b> <a href="stake.md#0x1_stake_StakePool">StakePool</a>, <a href="stake.md#0x1_stake_ValidatorConfig">ValidatorConfig</a>, <a href="stake.md#0x1_stake_ValidatorPerformance">ValidatorPerformance</a>, <a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a> {
     <b>let</b> validator_set = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a>&gt;(@aptos_framework);
-    // <b>let</b> config = <a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>();
+    // <b>let</b> config = staking_config::get();
     <b>let</b> validator_perf = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_ValidatorPerformance">ValidatorPerformance</a>&gt;(@aptos_framework);
 
     // Process pending <a href="stake.md#0x1_stake">stake</a> and distribute transaction fees and rewards for each currently active validator.
@@ -2359,7 +2359,7 @@ power.
     // Moreover, recalculate the total <a href="voting.md#0x1_voting">voting</a> power, and deactivate the validator whose
     // <a href="voting.md#0x1_voting">voting</a> power is less than the minimum required <a href="stake.md#0x1_stake">stake</a>.
     <b>let</b> next_epoch_validators = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_empty">vector::empty</a>();
-    // <b>let</b> (minimum_stake, _) = <a href="staking_config.md#0x1_staking_config_get_required_stake">staking_config::get_required_stake</a>(&config);
+    // <b>let</b> (minimum_stake, _) = staking_config::get_required_stake(&config);
     <b>let</b> minimum_stake = 0;
     // <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&minimum_stake);
 
@@ -2399,7 +2399,7 @@ power.
     // Update validator indices, reset performance scores, and renew lockups.
     validator_perf.validators = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_empty">vector::empty</a>();
     // <b>let</b> recurring_lockup_duration_secs = 0;
-    //<a href="staking_config.md#0x1_staking_config_get_recurring_lockup_duration">staking_config::get_recurring_lockup_duration</a>(&config);
+    //staking_config::get_recurring_lockup_duration(&config);
 
 
     <b>let</b> vlen = <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector_length">vector::length</a>(&validator_set.active_validators);
@@ -2446,7 +2446,7 @@ power.
 
     // <b>if</b> (<a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_periodical_reward_rate_decrease_enabled">features::periodical_reward_rate_decrease_enabled</a>()) {
     //     // Update rewards rate after reward distribution.
-    //     <a href="staking_config.md#0x1_staking_config_calculate_and_save_latest_epoch_rewards_rate">staking_config::calculate_and_save_latest_epoch_rewards_rate</a>();
+    //     staking_config::calculate_and_save_latest_epoch_rewards_rate();
     // };
 }
 </code></pre>
@@ -2491,7 +2491,7 @@ This function shouldn't abort.
     };
     <b>let</b> num_total_proposals = cur_validator_perf.successful_proposals + cur_validator_perf.failed_proposals;
 
-    // <b>let</b> (rewards_rate, rewards_rate_denominator) = <a href="staking_config.md#0x1_staking_config_get_reward_rate">staking_config::get_reward_rate</a>(<a href="staking_config.md#0x1_staking_config">staking_config</a>);
+    // <b>let</b> (rewards_rate, rewards_rate_denominator) = staking_config::get_reward_rate(staking_config);
     // print(&rewards_rate);
     // print(&rewards_rate_denominator);
     <b>let</b> rewards_rate = 1;
@@ -2781,7 +2781,7 @@ Returns validator's next epoch voting power, including pending_active, active, a
 <pre><code><b>fun</b> <a href="stake.md#0x1_stake_update_voting_power_increase">update_voting_power_increase</a>(increase_amount: u64) <b>acquires</b> <a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a> {
     <b>let</b> validator_set = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a>&gt;(@aptos_framework);
     // <b>let</b> voting_power_increase_limit =
-    //     (<a href="staking_config.md#0x1_staking_config_get_voting_power_increase_limit">staking_config::get_voting_power_increase_limit</a>(&<a href="staking_config.md#0x1_staking_config_get">staking_config::get</a>()) <b>as</b> u128);
+    //     (staking_config::get_voting_power_increase_limit(&staking_config::get()) <b>as</b> u128);
     <b>let</b> voting_power_increase_limit = 1000;
     validator_set.total_joining_power = validator_set.total_joining_power + (increase_amount <b>as</b> u128);
 

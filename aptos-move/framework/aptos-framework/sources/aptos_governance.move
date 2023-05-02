@@ -27,7 +27,7 @@ module aptos_framework::aptos_governance {
     use aptos_framework::governance_proposal::{Self, GovernanceProposal};
     use aptos_framework::reconfiguration;
     use aptos_framework::stake;
-    use aptos_framework::staking_config;
+    // use aptos_framework::staking_config;
     use aptos_framework::system_addresses;
     use aptos_framework::aptos_coin::{Self, AptosCoin};
     use aptos_framework::timestamp;

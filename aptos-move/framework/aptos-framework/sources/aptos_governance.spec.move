@@ -151,7 +151,7 @@ spec aptos_framework::aptos_governance {
         let proposer_address = signer::address_of(proposer);
         let governance_config = global<GovernanceConfig>(@aptos_framework);
         let stake_pool_res = global<stake::StakePool>(stake_pool);
-        aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
+        // aborts_if !exists<staking_config::StakingConfig>(@aptos_framework);
         aborts_if !exists<stake::StakePool>(stake_pool);
         aborts_if global<stake::StakePool>(stake_pool).delegated_voter != proposer_address;
         include AbortsIfNotGovernanceConfig;
@@ -159,8 +159,8 @@ spec aptos_framework::aptos_governance {
         let proposal_expiration = current_time + governance_config.voting_duration_secs;
         aborts_if stake_pool_res.locked_until_secs < proposal_expiration;
         aborts_if !exists<GovernanceEvents>(@aptos_framework);
-        let allow_validator_set_change = global<staking_config::StakingConfig>(@aptos_framework).allow_validator_set_change;
-        aborts_if !allow_validator_set_change && !exists<stake::ValidatorSet>(@aptos_framework);
+        // let allow_validator_set_change = global<staking_config::StakingConfig>(@aptos_framework).allow_validator_set_change;
+        // aborts_if !allow_validator_set_change && !exists<stake::ValidatorSet>(@aptos_framework);
     }
 
     /// stake_pool must exist StakePool.
@@ -189,8 +189,8 @@ spec aptos_framework::aptos_governance {
         aborts_if stake_pool_res.delegated_voter != voter_address;
         aborts_if !exists<VotingRecords>(@aptos_framework);
         aborts_if !exists<voting::VotingForum<GovernanceProposal>>(@aptos_framework);
-        let allow_validator_set_change = global<staking_config::StakingConfig>(@aptos_framework).allow_validator_set_change;
-        aborts_if !allow_validator_set_change && !exists<stake::ValidatorSet>(@aptos_framework);
+        // let allow_validator_set_change = global<staking_config::StakingConfig>(@aptos_framework).allow_validator_set_change;
+        // aborts_if !allow_validator_set_change && !exists<stake::ValidatorSet>(@aptos_framework);
         let voting_forum = global<voting::VotingForum<GovernanceProposal>>(@aptos_framework);
         let proposal = table::spec_get(voting_forum.proposals, proposal_id);
         let proposal_expiration = proposal.expiration_secs;
@@ -248,14 +248,14 @@ spec aptos_framework::aptos_governance {
         use aptos_framework::coin::CoinInfo;
         use aptos_framework::aptos_coin::AptosCoin;
         use aptos_framework::transaction_fee;
-        use aptos_framework::staking_config;
+        // use aptos_framework::staking_config;
 
         pragma verify_duration_estimate = 120; // TODO: set because of timeout (property proved)
 
         aborts_if !system_addresses::is_aptos_framework_address(signer::address_of(aptos_framework));
 
         include transaction_fee::RequiresCollectedFeesPerValueLeqBlockAptosSupply;
-        include staking_config::StakingRewardsConfigRequirement;
+        // include staking_config::StakingRewardsConfigRequirement;
         requires chain_status::is_operating();
         requires timestamp::spec_now_microseconds() >= reconfiguration::last_reconfiguration_time();
         requires exists<stake::ValidatorFees>(@aptos_framework);

@@ -56,7 +56,6 @@
 -  [Function `get_validator_config`](#0x1_stake_get_validator_config)
 -  [Function `stake_pool_exists`](#0x1_stake_stake_pool_exists)
 -  [Function `initialize`](#0x1_stake_initialize)
--  [Function `store_aptos_coin_mint_cap`](#0x1_stake_store_aptos_coin_mint_cap)
 -  [Function `remove_validators`](#0x1_stake_remove_validators)
 -  [Function `initialize_stake_owner`](#0x1_stake_initialize_stake_owner)
 -  [Function `initialize_validator`](#0x1_stake_initialize_validator)
@@ -1536,37 +1535,12 @@ Initialize validator set to the core resource account.
 
 </details>
 
-<a name="0x1_stake_store_aptos_coin_mint_cap"></a>
-
-## Function `store_aptos_coin_mint_cap`
-
-This is only called during Genesis, which is where MintCapability<AptosCoin> can be created.
-Beyond genesis, no one can create AptosCoin mint/burn capabilities.
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="stake.md#0x1_stake_store_aptos_coin_mint_cap">store_aptos_coin_mint_cap</a>(aptos_framework: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, mint_cap: <a href="coin.md#0x1_coin_MintCapability">coin::MintCapability</a>&lt;<a href="aptos_coin.md#0x1_aptos_coin_AptosCoin">aptos_coin::AptosCoin</a>&gt;)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b>(<b>friend</b>) <b>fun</b> <a href="stake.md#0x1_stake_store_aptos_coin_mint_cap">store_aptos_coin_mint_cap</a>(aptos_framework: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, mint_cap: MintCapability&lt;AptosCoin&gt;) {
-    <a href="system_addresses.md#0x1_system_addresses_assert_aptos_framework">system_addresses::assert_aptos_framework</a>(aptos_framework);
-    <b>move_to</b>(aptos_framework, <a href="stake.md#0x1_stake_AptosCoinCapabilities">AptosCoinCapabilities</a> { mint_cap })
-}
-</code></pre>
-
-
-
-</details>
-
 <a name="0x1_stake_remove_validators"></a>
 
 ## Function `remove_validators`
 
+This is only called during Genesis, which is where MintCapability<AptosCoin> can be created.
+Beyond genesis, no one can create AptosCoin mint/burn capabilities.
 Allow on chain governance to remove validators from the validator set.
 
 

@@ -423,12 +423,16 @@ module aptos_framework::stake {
 
     /// This is only called during Genesis, which is where MintCapability<AptosCoin> can be created.
     /// Beyond genesis, no one can create AptosCoin mint/burn capabilities.
-    public(friend) fun store_aptos_coin_mint_cap(aptos_framework: &signer, mint_cap: MintCapability<AptosCoin>) {
-        system_addresses::assert_aptos_framework(aptos_framework);
-        move_to(aptos_framework, AptosCoinCapabilities { mint_cap })
-    }
+
+    // TODO: v7 - remove this
+    // public(friend) fun store_aptos_coin_mint_cap(aptos_framework: &signer, mint_cap: MintCapability<AptosCoin>) {
+    //     system_addresses::assert_aptos_framework(aptos_framework);
+    //     move_to(aptos_framework, AptosCoinCapabilities { mint_cap })
+    // }
 
     /// Allow on chain governance to remove validators from the validator set.
+    // TODO: v7 - remove this
+
     public fun remove_validators(
         aptos_framework: &signer,
         validators: &vector<address>,
@@ -608,12 +612,16 @@ module aptos_framework::stake {
     // }
 
     /// Add `amount` of coins from the `account` owning the StakePool.
+
+    // TODO: v7 - remove this
     public entry fun add_stake(owner: &signer, amount: u64) acquires OwnerCapability, StakePool, ValidatorSet {
         let owner_address = signer::address_of(owner);
         assert_owner_cap_exists(owner_address);
         let ownership_cap = borrow_global<OwnerCapability>(owner_address);
         add_stake_with_cap(ownership_cap, coin::withdraw<AptosCoin>(owner, amount));
     }
+
+    // TODO: v7 - remove this
 
     /// Add `coins` into `pool_address`. this requires the corresponding `owner_cap` to be passed in.
     public fun add_stake_with_cap(owner_cap: &OwnerCapability, coins: Coin<AptosCoin>) acquires StakePool, ValidatorSet {
@@ -1248,6 +1256,7 @@ module aptos_framework::stake {
     }
 
     /// Calculate the rewards amount.
+    // TODO: v7 - remove this
     fun calculate_rewards_amount(
         stake_amount: u64,
         num_successful_proposals: u64,
@@ -1275,6 +1284,8 @@ module aptos_framework::stake {
     }
 
     /// Mint rewards corresponding to current epoch's `stake` and `num_successful_votes`.
+
+    // TODO: v7 - change this
     fun distribute_rewards(
         stake: &mut Coin<AptosCoin>,
         num_successful_proposals: u64,
@@ -1329,6 +1340,9 @@ module aptos_framework::stake {
     }
 
     /// Returns validator's next epoch voting power, including pending_active, active, and pending_inactive stake.
+
+    // TODO: v7 - remove this
+
     fun get_next_epoch_voting_power(stake_pool: &StakePool): u64 {
         let value_pending_active = coin::value(&stake_pool.pending_active);
         let value_active = coin::value(&stake_pool.active);
@@ -1339,6 +1353,8 @@ module aptos_framework::stake {
         // value_pending_active + value_active + value_pending_inactive;
         1
     }
+
+    // TODO: v7 - remove this
 
     fun update_voting_power_increase(increase_amount: u64) acquires ValidatorSet {
         let validator_set = borrow_global_mut<ValidatorSet>(@aptos_framework);
@@ -1359,6 +1375,8 @@ module aptos_framework::stake {
     fun assert_stake_pool_exists(pool_address: address) {
         assert!(stake_pool_exists(pool_address), error::invalid_argument(ESTAKE_POOL_DOES_NOT_EXIST));
     }
+
+    // TODO: v7 - remove this
 
     /// This provides an ACL for Testnet purposes. In testnet, everyone is a whale, a whale can be a validator.
     /// This allows a testnet to bring additional entities into the validator set without compromising the
@@ -1386,6 +1404,7 @@ module aptos_framework::stake {
             vector::contains(&allowed.accounts, &account)
         }
     }
+    // TODO: v7 - remove this
 
     fun assert_owner_cap_exists(owner: address) {
         assert!(exists<OwnerCapability>(owner), error::not_found(EOWNER_CAP_NOT_FOUND));

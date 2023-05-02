@@ -410,11 +410,6 @@ pub enum EntryFunctionCall {
         code: Vec<Vec<u8>>,
     },
 
-    /// Add `amount` of coins from the `account` owning the StakePool.
-    StakeAddStake {
-        amount: u64,
-    },
-
     /// Initialize the validator account and give ownership to the signing account
     /// except it leaves the ValidatorConfig to be set by another entity.
     /// Note: this triggers setting the operator and owner, set it to the account's address
@@ -452,6 +447,7 @@ pub enum EntryFunctionCall {
         pool_address: AccountAddress,
     },
 
+    /// Add `amount` of coins from the `account` owning the StakePool.
     /// Rotate the consensus key of the validator, it'll take effect in next epoch.
     StakeRotateConsensusKey {
         pool_address: AccountAddress,
@@ -699,7 +695,6 @@ impl EntryFunctionCall {
                 metadata_serialized,
                 code,
             ),
-            StakeAddStake { amount } => stake_add_stake(amount),
             StakeInitializeStakeOwner {
                 initial_stake_amount,
                 operator,
@@ -1756,22 +1751,6 @@ pub fn resource_account_create_resource_account_and_publish_package(
     ))
 }
 
-/// Add `amount` of coins from the `account` owning the StakePool.
-pub fn stake_add_stake(amount: u64) -> TransactionPayload {
-    TransactionPayload::EntryFunction(EntryFunction::new(
-        ModuleId::new(
-            AccountAddress::new([
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                0, 0, 0, 1,
-            ]),
-            ident_str!("stake").to_owned(),
-        ),
-        ident_str!("add_stake").to_owned(),
-        vec![],
-        vec![bcs::to_bytes(&amount).unwrap()],
-    ))
-}
-
 /// Initialize the validator account and give ownership to the signing account
 /// except it leaves the ValidatorConfig to be set by another entity.
 /// Note: this triggers setting the operator and owner, set it to the account's address
@@ -1866,6 +1845,7 @@ pub fn stake_leave_validator_set(pool_address: AccountAddress) -> TransactionPay
     ))
 }
 
+/// Add `amount` of coins from the `account` owning the StakePool.
 /// Rotate the consensus key of the validator, it'll take effect in next epoch.
 pub fn stake_rotate_consensus_key(
     pool_address: AccountAddress,
@@ -2505,16 +2485,6 @@ mod decoder {
         }
     }
 
-    pub fn stake_add_stake(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
-        if let TransactionPayload::EntryFunction(script) = payload {
-            Some(EntryFunctionCall::StakeAddStake {
-                amount: bcs::from_bytes(script.args().get(0)?).ok()?,
-            })
-        } else {
-            None
-        }
-    }
-
     pub fn stake_initialize_stake_owner(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
         if let TransactionPayload::EntryFunction(script) = payload {
             Some(EntryFunctionCall::StakeInitializeStakeOwner {
@@ -2790,10 +2760,6 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "resource_account_create_resource_account_and_publish_package".to_string(),
             Box::new(decoder::resource_account_create_resource_account_and_publish_package),
-        );
-        map.insert(
-            "stake_add_stake".to_string(),
-            Box::new(decoder::stake_add_stake),
         );
         map.insert(
             "stake_initialize_stake_owner".to_string(),

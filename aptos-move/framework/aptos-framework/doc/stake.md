@@ -62,8 +62,6 @@
 -  [Function `initialize_owner`](#0x1_stake_initialize_owner)
 -  [Function `set_operator`](#0x1_stake_set_operator)
 -  [Function `set_operator_with_cap`](#0x1_stake_set_operator_with_cap)
--  [Function `add_stake`](#0x1_stake_add_stake)
--  [Function `add_stake_with_cap`](#0x1_stake_add_stake_with_cap)
 -  [Function `rotate_consensus_key`](#0x1_stake_rotate_consensus_key)
 -  [Function `update_network_and_fullnode_addresses`](#0x1_stake_update_network_and_fullnode_addresses)
 -  [Function `join_validator_set`](#0x1_stake_join_validator_set)
@@ -73,7 +71,6 @@
 -  [Function `update_performance_statistics`](#0x1_stake_update_performance_statistics)
 -  [Function `on_new_epoch`](#0x1_stake_on_new_epoch)
 -  [Function `update_stake_pool`](#0x1_stake_update_stake_pool)
--  [Function `calculate_rewards_amount`](#0x1_stake_calculate_rewards_amount)
 -  [Function `distribute_rewards`](#0x1_stake_distribute_rewards)
 -  [Function `append`](#0x1_stake_append)
 -  [Function `find_validator`](#0x1_stake_find_validator)
@@ -90,16 +87,12 @@
     -  [Function `remove_validators`](#@Specification_1_remove_validators)
     -  [Function `initialize_stake_owner`](#@Specification_1_initialize_stake_owner)
     -  [Function `set_operator_with_cap`](#@Specification_1_set_operator_with_cap)
-    -  [Function `add_stake`](#@Specification_1_add_stake)
-    -  [Function `add_stake_with_cap`](#@Specification_1_add_stake_with_cap)
     -  [Function `rotate_consensus_key`](#@Specification_1_rotate_consensus_key)
     -  [Function `update_network_and_fullnode_addresses`](#@Specification_1_update_network_and_fullnode_addresses)
     -  [Function `is_current_epoch_validator`](#@Specification_1_is_current_epoch_validator)
     -  [Function `update_performance_statistics`](#@Specification_1_update_performance_statistics)
     -  [Function `on_new_epoch`](#@Specification_1_on_new_epoch)
     -  [Function `update_stake_pool`](#@Specification_1_update_stake_pool)
-    -  [Function `calculate_rewards_amount`](#@Specification_1_calculate_rewards_amount)
-    -  [Function `distribute_rewards`](#@Specification_1_distribute_rewards)
     -  [Function `append`](#@Specification_1_append)
     -  [Function `find_validator`](#@Specification_1_find_validator)
     -  [Function `update_voting_power_increase`](#@Specification_1_update_voting_power_increase)
@@ -1623,7 +1616,7 @@ to set later.
     });
 
     <b>if</b> (initial_stake_amount &gt; 0) {
-        // <a href="stake.md#0x1_stake_add_stake">add_stake</a>(owner, initial_stake_amount);
+        // add_stake(owner, initial_stake_amount);
     };
 
     <b>let</b> account_address = <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(owner);
@@ -1801,104 +1794,11 @@ Allows an account with ownership capability to change the operator of the stake 
 
 </details>
 
-<a name="0x1_stake_add_stake"></a>
-
-## Function `add_stake`
-
-Add <code>amount</code> of coins from the <code><a href="account.md#0x1_account">account</a></code> owning the StakePool.
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="stake.md#0x1_stake_add_stake">add_stake</a>(owner: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, amount: u64)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="stake.md#0x1_stake_add_stake">add_stake</a>(owner: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, amount: u64) <b>acquires</b> <a href="stake.md#0x1_stake_OwnerCapability">OwnerCapability</a>, <a href="stake.md#0x1_stake_StakePool">StakePool</a>, <a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a> {
-    <b>let</b> owner_address = <a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer_address_of">signer::address_of</a>(owner);
-    <a href="stake.md#0x1_stake_assert_owner_cap_exists">assert_owner_cap_exists</a>(owner_address);
-    <b>let</b> ownership_cap = <b>borrow_global</b>&lt;<a href="stake.md#0x1_stake_OwnerCapability">OwnerCapability</a>&gt;(owner_address);
-    <a href="stake.md#0x1_stake_add_stake_with_cap">add_stake_with_cap</a>(ownership_cap, <a href="coin.md#0x1_coin_withdraw">coin::withdraw</a>&lt;AptosCoin&gt;(owner, amount));
-}
-</code></pre>
-
-
-
-</details>
-
-<a name="0x1_stake_add_stake_with_cap"></a>
-
-## Function `add_stake_with_cap`
-
-Add <code>coins</code> into <code>pool_address</code>. this requires the corresponding <code>owner_cap</code> to be passed in.
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_add_stake_with_cap">add_stake_with_cap</a>(owner_cap: &<a href="stake.md#0x1_stake_OwnerCapability">stake::OwnerCapability</a>, coins: <a href="coin.md#0x1_coin_Coin">coin::Coin</a>&lt;<a href="aptos_coin.md#0x1_aptos_coin_AptosCoin">aptos_coin::AptosCoin</a>&gt;)
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_add_stake_with_cap">add_stake_with_cap</a>(owner_cap: &<a href="stake.md#0x1_stake_OwnerCapability">OwnerCapability</a>, coins: Coin&lt;AptosCoin&gt;) <b>acquires</b> <a href="stake.md#0x1_stake_StakePool">StakePool</a>, <a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a> {
-    <b>let</b> pool_address = owner_cap.pool_address;
-    <a href="stake.md#0x1_stake_assert_stake_pool_exists">assert_stake_pool_exists</a>(pool_address);
-
-    <b>let</b> amount = <a href="coin.md#0x1_coin_value">coin::value</a>(&coins);
-    <b>if</b> (amount == 0) {
-        <a href="coin.md#0x1_coin_destroy_zero">coin::destroy_zero</a>(coins);
-        <b>return</b>
-    };
-
-    // Only track and validate <a href="voting.md#0x1_voting">voting</a> power increase for active and pending_active validator.
-    // Pending_inactive validator will be removed from the validator set in the next epoch.
-    // Inactive validator's total <a href="stake.md#0x1_stake">stake</a> will be tracked when they join the validator set.
-    <b>let</b> validator_set = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_ValidatorSet">ValidatorSet</a>&gt;(@aptos_framework);
-    // Search directly rather using get_validator_state <b>to</b> save on unnecessary loops.
-    <b>if</b> (<a href="../../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_is_some">option::is_some</a>(&<a href="stake.md#0x1_stake_find_validator">find_validator</a>(&validator_set.active_validators, pool_address)) ||
-        <a href="../../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option_is_some">option::is_some</a>(&<a href="stake.md#0x1_stake_find_validator">find_validator</a>(&validator_set.pending_active, pool_address))) {
-        <a href="stake.md#0x1_stake_update_voting_power_increase">update_voting_power_increase</a>(amount);
-    };
-
-    // Add <b>to</b> pending_active <b>if</b> it's a current validator because the <a href="stake.md#0x1_stake">stake</a> is not counted until the next epoch.
-    // Otherwise, the delegation can be added <b>to</b> active directly <b>as</b> the validator is also activated in the epoch.
-    <b>let</b> stake_pool = <b>borrow_global_mut</b>&lt;<a href="stake.md#0x1_stake_StakePool">StakePool</a>&gt;(pool_address);
-    <b>if</b> (<a href="stake.md#0x1_stake_is_current_epoch_validator">is_current_epoch_validator</a>(pool_address)) {
-        <a href="coin.md#0x1_coin_merge">coin::merge</a>&lt;AptosCoin&gt;(&<b>mut</b> stake_pool.pending_active, coins);
-    } <b>else</b> {
-        <a href="coin.md#0x1_coin_merge">coin::merge</a>&lt;AptosCoin&gt;(&<b>mut</b> stake_pool.active, coins);
-    };
-
-    // <b>let</b> (_, maximum_stake) = staking_config::get_required_stake(&staking_config::get());
-    <b>let</b> maximum_stake = 1000;
-
-    <b>let</b> voting_power = <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool);
-
-    <b>assert</b>!(voting_power &lt;= maximum_stake, <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="stake.md#0x1_stake_ESTAKE_EXCEEDS_MAX">ESTAKE_EXCEEDS_MAX</a>));
-
-    <a href="event.md#0x1_event_emit_event">event::emit_event</a>(
-        &<b>mut</b> stake_pool.add_stake_events,
-        <a href="stake.md#0x1_stake_AddStakeEvent">AddStakeEvent</a> {
-            pool_address,
-            amount_added: amount,
-        },
-    );
-}
-</code></pre>
-
-
-
-</details>
-
 <a name="0x1_stake_rotate_consensus_key"></a>
 
 ## Function `rotate_consensus_key`
 
+Add <code>amount</code> of coins from the <code><a href="account.md#0x1_account">account</a></code> owning the StakePool.
 Rotate the consensus key of the validator, it'll take effect in next epoch.
 
 
@@ -2073,7 +1973,7 @@ This internal version can only be called by the Genesis module during Genesis.
     // <b>let</b> (minimum_stake, maximum_stake) = staking_config::get_required_stake(&config);
     <b>let</b> minimum_stake = 1;
     <b>let</b> maximum_stake = 100;
-    <b>let</b> voting_power = <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool);
+    <b>let</b> voting_power = 1; // <a href="voting.md#0x1_voting">voting</a> power is always 1 in Libra
     <b>assert</b>!(voting_power &gt;= minimum_stake, <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="stake.md#0x1_stake_ESTAKE_TOO_LOW">ESTAKE_TOO_LOW</a>));
     <b>assert</b>!(voting_power &lt;= maximum_stake, <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error_invalid_argument">error::invalid_argument</a>(<a href="stake.md#0x1_stake_ESTAKE_TOO_HIGH">ESTAKE_TOO_HIGH</a>));
     print(&40003);
@@ -2151,7 +2051,7 @@ Can only be called by the operator of the validator/staking pool.
         // Decrease the <a href="voting.md#0x1_voting">voting</a> power increase <b>as</b> the pending validator's <a href="voting.md#0x1_voting">voting</a> power was added when they requested
         // <b>to</b> join. Now that they changed their mind, their <a href="voting.md#0x1_voting">voting</a> power should not affect the joining limit of this
         // epoch.
-        <b>let</b> validator_stake = (<a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool) <b>as</b> u128);
+        <b>let</b> validator_stake = 1; // NOTE: <a href="voting.md#0x1_voting">voting</a> power is always 1 in Libra
         // total_joining_power should be larger than validator_stake but just in case there <b>has</b> been a small
         // rounding <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error">error</a> somewhere that can lead <b>to</b> an underflow, we still want <b>to</b> allow this transaction <b>to</b>
         // succeed.
@@ -2524,53 +2424,6 @@ This function shouldn't abort.
 
 </details>
 
-<a name="0x1_stake_calculate_rewards_amount"></a>
-
-## Function `calculate_rewards_amount`
-
-Calculate the rewards amount.
-
-
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_calculate_rewards_amount">calculate_rewards_amount</a>(stake_amount: u64, num_successful_proposals: u64, num_total_proposals: u64, rewards_rate: u64, rewards_rate_denominator: u64): u64
-</code></pre>
-
-
-
-<details>
-<summary>Implementation</summary>
-
-
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_calculate_rewards_amount">calculate_rewards_amount</a>(
-    stake_amount: u64,
-    num_successful_proposals: u64,
-    num_total_proposals: u64,
-    rewards_rate: u64,
-    rewards_rate_denominator: u64,
-): u64 {
-    <b>spec</b> {
-        // The following condition must hold because
-        // (1) num_successful_proposals &lt;= num_total_proposals, and
-        // (2) `num_total_proposals` cannot be larger than 86400, the maximum number of proposals
-        //     in a day (1 proposal per second), and `num_total_proposals` is reset <b>to</b> 0 every epoch.
-        <b>assume</b> num_successful_proposals * <a href="stake.md#0x1_stake_MAX_REWARDS_RATE">MAX_REWARDS_RATE</a> &lt;= <a href="stake.md#0x1_stake_MAX_U64">MAX_U64</a>;
-    };
-    // The rewards amount is equal <b>to</b> (<a href="stake.md#0x1_stake">stake</a> amount * rewards rate * performance multiplier).
-    // We do multiplication in u128 before division <b>to</b> avoid the overflow and minimize the rounding <a href="../../aptos-stdlib/../move-stdlib/doc/error.md#0x1_error">error</a>.
-    <b>let</b> rewards_numerator = (stake_amount <b>as</b> u128) * (rewards_rate <b>as</b> u128) * (num_successful_proposals <b>as</b> u128);
-    <b>let</b> rewards_denominator = (rewards_rate_denominator <b>as</b> u128) * (num_total_proposals <b>as</b> u128);
-    <b>if</b> (rewards_denominator &gt; 0) {
-        ((rewards_numerator / rewards_denominator) <b>as</b> u64)
-    } <b>else</b> {
-        0
-    };
-    0
-}
-</code></pre>
-
-
-
-</details>
-
 <a name="0x1_stake_distribute_rewards"></a>
 
 ## Function `distribute_rewards`
@@ -2578,7 +2431,7 @@ Calculate the rewards amount.
 Mint rewards corresponding to current epoch's <code><a href="stake.md#0x1_stake">stake</a></code> and <code>num_successful_votes</code>.
 
 
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_distribute_rewards">distribute_rewards</a>(<a href="stake.md#0x1_stake">stake</a>: &<b>mut</b> <a href="coin.md#0x1_coin_Coin">coin::Coin</a>&lt;<a href="aptos_coin.md#0x1_aptos_coin_AptosCoin">aptos_coin::AptosCoin</a>&gt;, num_successful_proposals: u64, num_total_proposals: u64, rewards_rate: u64, rewards_rate_denominator: u64): u64
+<pre><code><b>fun</b> <a href="stake.md#0x1_stake_distribute_rewards">distribute_rewards</a>(<a href="stake.md#0x1_stake">stake</a>: &<b>mut</b> <a href="coin.md#0x1_coin_Coin">coin::Coin</a>&lt;<a href="aptos_coin.md#0x1_aptos_coin_AptosCoin">aptos_coin::AptosCoin</a>&gt;, _num_successful_proposals: u64, _num_total_proposals: u64, _rewards_rate: u64, _rewards_rate_denominator: u64): u64
 </code></pre>
 
 
@@ -2589,17 +2442,13 @@ Mint rewards corresponding to current epoch's <code><a href="stake.md#0x1_stake"
 
 <pre><code><b>fun</b> <a href="stake.md#0x1_stake_distribute_rewards">distribute_rewards</a>(
     <a href="stake.md#0x1_stake">stake</a>: &<b>mut</b> Coin&lt;AptosCoin&gt;,
-    num_successful_proposals: u64,
-    num_total_proposals: u64,
-    rewards_rate: u64,
-    rewards_rate_denominator: u64,
+    _num_successful_proposals: u64,
+    _num_total_proposals: u64,
+    _rewards_rate: u64,
+    _rewards_rate_denominator: u64,
 ): u64 <b>acquires</b> <a href="stake.md#0x1_stake_AptosCoinCapabilities">AptosCoinCapabilities</a> {
-    <b>let</b> stake_amount = <a href="coin.md#0x1_coin_value">coin::value</a>(<a href="stake.md#0x1_stake">stake</a>);
-    <b>let</b> rewards_amount = <b>if</b> (stake_amount &gt; 0) {
-        <a href="stake.md#0x1_stake_calculate_rewards_amount">calculate_rewards_amount</a>(stake_amount, num_successful_proposals, num_total_proposals, rewards_rate, rewards_rate_denominator)
-    } <b>else</b> {
-        0
-    };
+    // <b>let</b> _stake_amount = <a href="coin.md#0x1_coin_value">coin::value</a>(<a href="stake.md#0x1_stake">stake</a>);
+    <b>let</b> rewards_amount = 0;
     <b>if</b> (rewards_amount &gt; 0) {
         <b>let</b> mint_cap = &<b>borrow_global</b>&lt;<a href="stake.md#0x1_stake_AptosCoinCapabilities">AptosCoinCapabilities</a>&gt;(@aptos_framework).mint_cap;
         <b>let</b> rewards = <a href="coin.md#0x1_coin_mint">coin::mint</a>(rewards_amount, mint_cap);
@@ -2712,7 +2561,7 @@ Mint rewards corresponding to current epoch's <code><a href="stake.md#0x1_stake"
 Returns validator's next epoch voting power, including pending_active, active, and pending_inactive stake.
 
 
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool: &<a href="stake.md#0x1_stake_StakePool">stake::StakePool</a>): u64
+<pre><code><b>fun</b> <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(_stake_pool: &<a href="stake.md#0x1_stake_StakePool">stake::StakePool</a>): u64
 </code></pre>
 
 
@@ -2721,14 +2570,14 @@ Returns validator's next epoch voting power, including pending_active, active, a
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(stake_pool: &<a href="stake.md#0x1_stake_StakePool">StakePool</a>): u64 {
-    <b>let</b> value_pending_active = <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.pending_active);
-    <b>let</b> value_active = <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.active);
-    <b>let</b> value_pending_inactive = <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.pending_inactive);
-    <b>spec</b> {
-        <b>assume</b> value_pending_active + value_active + value_pending_inactive &lt;= <a href="stake.md#0x1_stake_MAX_U64">MAX_U64</a>;
-    };
-    // value_pending_active + value_active + value_pending_inactive;
+<pre><code><b>fun</b> <a href="stake.md#0x1_stake_get_next_epoch_voting_power">get_next_epoch_voting_power</a>(_stake_pool: &<a href="stake.md#0x1_stake_StakePool">StakePool</a>): u64 {
+    // <b>let</b> value_pending_active = <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.pending_active);
+    // <b>let</b> value_active = <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.active);
+    // <b>let</b> value_pending_inactive = <a href="coin.md#0x1_coin_value">coin::value</a>(&stake_pool.pending_inactive);
+    // <b>spec</b> {
+    //     <b>assume</b> value_pending_active + value_active + value_pending_inactive &lt;= <a href="stake.md#0x1_stake_MAX_U64">MAX_U64</a>;
+    // };
+    // // value_pending_active + value_active + value_pending_inactive;
     1
 }
 </code></pre>
@@ -3005,38 +2854,6 @@ Returns validator's next epoch voting power, including pending_active, active, a
 
 
 
-<a name="@Specification_1_add_stake"></a>
-
-### Function `add_stake`
-
-
-<pre><code><b>public</b> entry <b>fun</b> <a href="stake.md#0x1_stake_add_stake">add_stake</a>(owner: &<a href="../../aptos-stdlib/../move-stdlib/doc/signer.md#0x1_signer">signer</a>, amount: u64)
-</code></pre>
-
-
-
-
-<pre><code><b>include</b> <a href="stake.md#0x1_stake_ResourceRequirement">ResourceRequirement</a>;
-</code></pre>
-
-
-
-<a name="@Specification_1_add_stake_with_cap"></a>
-
-### Function `add_stake_with_cap`
-
-
-<pre><code><b>public</b> <b>fun</b> <a href="stake.md#0x1_stake_add_stake_with_cap">add_stake_with_cap</a>(owner_cap: &<a href="stake.md#0x1_stake_OwnerCapability">stake::OwnerCapability</a>, coins: <a href="coin.md#0x1_coin_Coin">coin::Coin</a>&lt;<a href="aptos_coin.md#0x1_aptos_coin_AptosCoin">aptos_coin::AptosCoin</a>&gt;)
-</code></pre>
-
-
-
-
-<pre><code><b>include</b> <a href="stake.md#0x1_stake_ResourceRequirement">ResourceRequirement</a>;
-</code></pre>
-
-
-
 <a name="@Specification_1_rotate_consensus_key"></a>
 
 ### Function `rotate_consensus_key`
@@ -3147,76 +2964,6 @@ Returns validator's next epoch voting power, including pending_active, active, a
 <b>aborts_if</b> !<b>exists</b>&lt;<a href="stake.md#0x1_stake_StakePool">StakePool</a>&gt;(pool_address);
 <b>aborts_if</b> !<b>exists</b>&lt;<a href="stake.md#0x1_stake_ValidatorConfig">ValidatorConfig</a>&gt;(pool_address);
 <b>aborts_if</b> <b>global</b>&lt;<a href="stake.md#0x1_stake_ValidatorConfig">ValidatorConfig</a>&gt;(pool_address).validator_index &gt;= len(validator_perf.validators);
-</code></pre>
-
-
-
-<a name="@Specification_1_calculate_rewards_amount"></a>
-
-### Function `calculate_rewards_amount`
-
-
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_calculate_rewards_amount">calculate_rewards_amount</a>(stake_amount: u64, num_successful_proposals: u64, num_total_proposals: u64, rewards_rate: u64, rewards_rate_denominator: u64): u64
-</code></pre>
-
-
-
-
-<pre><code><b>pragma</b> opaque;
-<b>requires</b> rewards_rate &lt;= <a href="stake.md#0x1_stake_MAX_REWARDS_RATE">MAX_REWARDS_RATE</a>;
-<b>requires</b> rewards_rate_denominator &gt; 0;
-<b>requires</b> rewards_rate &lt;= rewards_rate_denominator;
-<b>requires</b> num_successful_proposals &lt;= num_total_proposals;
-<b>ensures</b> [concrete] (rewards_rate_denominator * num_total_proposals == 0) ==&gt; result == 0;
-<b>ensures</b> [concrete] (rewards_rate_denominator * num_total_proposals &gt; 0) ==&gt; {
-    <b>let</b> amount = ((stake_amount * rewards_rate * num_successful_proposals) /
-        (rewards_rate_denominator * num_total_proposals));
-    result == amount
-};
-<b>aborts_if</b> <b>false</b>;
-<b>ensures</b> [abstract] result == <a href="stake.md#0x1_stake_spec_rewards_amount">spec_rewards_amount</a>(
-    stake_amount,
-    num_successful_proposals,
-    num_total_proposals,
-    rewards_rate,
-    rewards_rate_denominator);
-</code></pre>
-
-
-
-<a name="@Specification_1_distribute_rewards"></a>
-
-### Function `distribute_rewards`
-
-
-<pre><code><b>fun</b> <a href="stake.md#0x1_stake_distribute_rewards">distribute_rewards</a>(<a href="stake.md#0x1_stake">stake</a>: &<b>mut</b> <a href="coin.md#0x1_coin_Coin">coin::Coin</a>&lt;<a href="aptos_coin.md#0x1_aptos_coin_AptosCoin">aptos_coin::AptosCoin</a>&gt;, num_successful_proposals: u64, num_total_proposals: u64, rewards_rate: u64, rewards_rate_denominator: u64): u64
-</code></pre>
-
-
-
-
-<pre><code><b>include</b> <a href="stake.md#0x1_stake_ResourceRequirement">ResourceRequirement</a>;
-<b>requires</b> rewards_rate &lt;= <a href="stake.md#0x1_stake_MAX_REWARDS_RATE">MAX_REWARDS_RATE</a>;
-<b>requires</b> rewards_rate_denominator &gt; 0;
-<b>requires</b> rewards_rate &lt;= rewards_rate_denominator;
-<b>requires</b> num_successful_proposals &lt;= num_total_proposals;
-<b>aborts_if</b> <b>false</b>;
-<b>ensures</b> <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value) &gt; 0 ==&gt;
-    result == <a href="stake.md#0x1_stake_spec_rewards_amount">spec_rewards_amount</a>(
-        <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value),
-        num_successful_proposals,
-        num_total_proposals,
-        rewards_rate,
-        rewards_rate_denominator);
-<b>ensures</b> <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value) &gt; 0 ==&gt;
-    <a href="stake.md#0x1_stake">stake</a>.value == <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value) + <a href="stake.md#0x1_stake_spec_rewards_amount">spec_rewards_amount</a>(
-        <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value),
-        num_successful_proposals,
-        num_total_proposals,
-        rewards_rate,
-        rewards_rate_denominator);
-<b>ensures</b> <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value) == 0 ==&gt; result == 0;
-<b>ensures</b> <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value) == 0 ==&gt; <a href="stake.md#0x1_stake">stake</a>.value == <b>old</b>(<a href="stake.md#0x1_stake">stake</a>.value);
 </code></pre>
 
 

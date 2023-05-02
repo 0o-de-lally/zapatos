@@ -157,53 +157,53 @@ spec aptos_framework::stake {
         aborts_if global<ValidatorConfig>(pool_address).validator_index >= len(validator_perf.validators);
     }
 
-    spec distribute_rewards {
-        include ResourceRequirement;
-        requires rewards_rate <= MAX_REWARDS_RATE;
-        requires rewards_rate_denominator > 0;
-        requires rewards_rate <= rewards_rate_denominator;
-        requires num_successful_proposals <= num_total_proposals;
-        aborts_if false;
-        ensures old(stake.value) > 0 ==>
-            result == spec_rewards_amount(
-                old(stake.value),
-                num_successful_proposals,
-                num_total_proposals,
-                rewards_rate,
-                rewards_rate_denominator);
-        ensures old(stake.value) > 0 ==>
-            stake.value == old(stake.value) + spec_rewards_amount(
-                old(stake.value),
-                num_successful_proposals,
-                num_total_proposals,
-                rewards_rate,
-                rewards_rate_denominator);
-        ensures old(stake.value) == 0 ==> result == 0;
-        ensures old(stake.value) == 0 ==> stake.value == old(stake.value);
-    }
+    // spec distribute_rewards {
+    //     include ResourceRequirement;
+    //     requires rewards_rate <= MAX_REWARDS_RATE;
+    //     requires rewards_rate_denominator > 0;
+    //     requires rewards_rate <= rewards_rate_denominator;
+    //     requires num_successful_proposals <= num_total_proposals;
+    //     aborts_if false;
+    //     ensures old(stake.value) > 0 ==>
+    //         result == spec_rewards_amount(
+    //             old(stake.value),
+    //             num_successful_proposals,
+    //             num_total_proposals,
+    //             rewards_rate,
+    //             rewards_rate_denominator);
+    //     ensures old(stake.value) > 0 ==>
+    //         stake.value == old(stake.value) + spec_rewards_amount(
+    //             old(stake.value),
+    //             num_successful_proposals,
+    //             num_total_proposals,
+    //             rewards_rate,
+    //             rewards_rate_denominator);
+    //     ensures old(stake.value) == 0 ==> result == 0;
+    //     ensures old(stake.value) == 0 ==> stake.value == old(stake.value);
+    // }
 
-    spec calculate_rewards_amount {
-        pragma opaque;
-        requires rewards_rate <= MAX_REWARDS_RATE;
-        requires rewards_rate_denominator > 0;
-        requires rewards_rate <= rewards_rate_denominator;
-        requires num_successful_proposals <= num_total_proposals;
-        ensures [concrete] (rewards_rate_denominator * num_total_proposals == 0) ==> result == 0;
-        ensures [concrete] (rewards_rate_denominator * num_total_proposals > 0) ==> {
-            let amount = ((stake_amount * rewards_rate * num_successful_proposals) /
-                (rewards_rate_denominator * num_total_proposals));
-            result == amount
-        };
-        aborts_if false;
+    // spec calculate_rewards_amount {
+    //     pragma opaque;
+    //     requires rewards_rate <= MAX_REWARDS_RATE;
+    //     requires rewards_rate_denominator > 0;
+    //     requires rewards_rate <= rewards_rate_denominator;
+    //     requires num_successful_proposals <= num_total_proposals;
+    //     ensures [concrete] (rewards_rate_denominator * num_total_proposals == 0) ==> result == 0;
+    //     ensures [concrete] (rewards_rate_denominator * num_total_proposals > 0) ==> {
+    //         let amount = ((stake_amount * rewards_rate * num_successful_proposals) /
+    //             (rewards_rate_denominator * num_total_proposals));
+    //         result == amount
+    //     };
+    //     aborts_if false;
 
-        // Used an uninterpreted spec function to avoid dealing with the arithmetic overflow and non-linear arithmetic.
-        ensures [abstract] result == spec_rewards_amount(
-            stake_amount,
-            num_successful_proposals,
-            num_total_proposals,
-            rewards_rate,
-            rewards_rate_denominator);
-    }
+    //     // Used an uninterpreted spec function to avoid dealing with the arithmetic overflow and non-linear arithmetic.
+    //     ensures [abstract] result == spec_rewards_amount(
+    //         stake_amount,
+    //         num_successful_proposals,
+    //         num_total_proposals,
+    //         rewards_rate,
+    //         rewards_rate_denominator);
+    // }
 
     spec find_validator {
         pragma opaque;
@@ -247,13 +247,13 @@ spec aptos_framework::stake {
         );
     }
 
-    spec add_stake_with_cap {
-        include ResourceRequirement;
-    }
+    // spec add_stake_with_cap {
+    //     include ResourceRequirement;
+    // }
 
-    spec add_stake {
-        include ResourceRequirement;
-    }
+    // spec add_stake {
+    //     include ResourceRequirement;
+    // }
 
     spec initialize_stake_owner {
         include ResourceRequirement;

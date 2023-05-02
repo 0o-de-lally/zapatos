@@ -614,60 +614,60 @@ module aptos_framework::stake {
     /// Add `amount` of coins from the `account` owning the StakePool.
 
     // TODO: v7 - remove this
-    public entry fun add_stake(owner: &signer, amount: u64) acquires OwnerCapability, StakePool, ValidatorSet {
-        let owner_address = signer::address_of(owner);
-        assert_owner_cap_exists(owner_address);
-        let ownership_cap = borrow_global<OwnerCapability>(owner_address);
-        add_stake_with_cap(ownership_cap, coin::withdraw<AptosCoin>(owner, amount));
-    }
+    // public entry fun add_stake(owner: &signer, amount: u64) acquires OwnerCapability, StakePool, ValidatorSet {
+    //     let owner_address = signer::address_of(owner);
+    //     assert_owner_cap_exists(owner_address);
+    //     let ownership_cap = borrow_global<OwnerCapability>(owner_address);
+    //     add_stake_with_cap(ownership_cap, coin::withdraw<AptosCoin>(owner, amount));
+    // }
 
     // TODO: v7 - remove this
 
-    /// Add `coins` into `pool_address`. this requires the corresponding `owner_cap` to be passed in.
-    public fun add_stake_with_cap(owner_cap: &OwnerCapability, coins: Coin<AptosCoin>) acquires StakePool, ValidatorSet {
-        let pool_address = owner_cap.pool_address;
-        assert_stake_pool_exists(pool_address);
+    // /// Add `coins` into `pool_address`. this requires the corresponding `owner_cap` to be passed in.
+    // public fun add_stake_with_cap(owner_cap: &OwnerCapability, coins: Coin<AptosCoin>) acquires StakePool, ValidatorSet {
+    //     let pool_address = owner_cap.pool_address;
+    //     assert_stake_pool_exists(pool_address);
 
-        let amount = coin::value(&coins);
-        if (amount == 0) {
-            coin::destroy_zero(coins);
-            return
-        };
+    //     let amount = coin::value(&coins);
+    //     if (amount == 0) {
+    //         coin::destroy_zero(coins);
+    //         return
+    //     };
 
-        // Only track and validate voting power increase for active and pending_active validator.
-        // Pending_inactive validator will be removed from the validator set in the next epoch.
-        // Inactive validator's total stake will be tracked when they join the validator set.
-        let validator_set = borrow_global_mut<ValidatorSet>(@aptos_framework);
-        // Search directly rather using get_validator_state to save on unnecessary loops.
-        if (option::is_some(&find_validator(&validator_set.active_validators, pool_address)) ||
-            option::is_some(&find_validator(&validator_set.pending_active, pool_address))) {
-            update_voting_power_increase(amount);
-        };
+    //     // Only track and validate voting power increase for active and pending_active validator.
+    //     // Pending_inactive validator will be removed from the validator set in the next epoch.
+    //     // Inactive validator's total stake will be tracked when they join the validator set.
+    //     let validator_set = borrow_global_mut<ValidatorSet>(@aptos_framework);
+    //     // Search directly rather using get_validator_state to save on unnecessary loops.
+    //     if (option::is_some(&find_validator(&validator_set.active_validators, pool_address)) ||
+    //         option::is_some(&find_validator(&validator_set.pending_active, pool_address))) {
+    //         update_voting_power_increase(amount);
+    //     };
 
-        // Add to pending_active if it's a current validator because the stake is not counted until the next epoch.
-        // Otherwise, the delegation can be added to active directly as the validator is also activated in the epoch.
-        let stake_pool = borrow_global_mut<StakePool>(pool_address);
-        if (is_current_epoch_validator(pool_address)) {
-            coin::merge<AptosCoin>(&mut stake_pool.pending_active, coins);
-        } else {
-            coin::merge<AptosCoin>(&mut stake_pool.active, coins);
-        };
+    //     // Add to pending_active if it's a current validator because the stake is not counted until the next epoch.
+    //     // Otherwise, the delegation can be added to active directly as the validator is also activated in the epoch.
+    //     let stake_pool = borrow_global_mut<StakePool>(pool_address);
+    //     if (is_current_epoch_validator(pool_address)) {
+    //         coin::merge<AptosCoin>(&mut stake_pool.pending_active, coins);
+    //     } else {
+    //         coin::merge<AptosCoin>(&mut stake_pool.active, coins);
+    //     };
 
-        // let (_, maximum_stake) = staking_config::get_required_stake(&staking_config::get());
-        let maximum_stake = 1000;
+    //     // let (_, maximum_stake) = staking_config::get_required_stake(&staking_config::get());
+    //     let maximum_stake = 1000;
 
-        let voting_power = get_next_epoch_voting_power(stake_pool);
+    //     let voting_power = get_next_epoch_voting_power(stake_pool);
 
-        assert!(voting_power <= maximum_stake, error::invalid_argument(ESTAKE_EXCEEDS_MAX));
+    //     assert!(voting_power <= maximum_stake, error::invalid_argument(ESTAKE_EXCEEDS_MAX));
 
-        event::emit_event(
-            &mut stake_pool.add_stake_events,
-            AddStakeEvent {
-                pool_address,
-                amount_added: amount,
-            },
-        );
-    }
+    //     event::emit_event(
+    //         &mut stake_pool.add_stake_events,
+    //         AddStakeEvent {
+    //             pool_address,
+    //             amount_added: amount,
+    //         },
+    //     );
+    // }
 
     // /// Move `amount` of coins from pending_inactive to active.
     // public entry fun reactivate_stake(owner: &signer, amount: u64) acquires OwnerCapability, StakePool {
@@ -833,7 +833,7 @@ module aptos_framework::stake {
         // let (minimum_stake, maximum_stake) = staking_config::get_required_stake(&config);
         let minimum_stake = 1;
         let maximum_stake = 100;
-        let voting_power = get_next_epoch_voting_power(stake_pool);
+        let voting_power = 1; // voting power is always 1 in Libra
         assert!(voting_power >= minimum_stake, error::invalid_argument(ESTAKE_TOO_LOW));
         assert!(voting_power <= maximum_stake, error::invalid_argument(ESTAKE_TOO_HIGH));
         print(&40003);
@@ -942,6 +942,8 @@ module aptos_framework::stake {
     /// is still operational.
     ///
     /// Can only be called by the operator of the validator/staking pool.
+
+    // TODO: V7 change this
     public entry fun leave_validator_set(
         operator: &signer,
         pool_address: address
@@ -967,7 +969,7 @@ module aptos_framework::stake {
             // Decrease the voting power increase as the pending validator's voting power was added when they requested
             // to join. Now that they changed their mind, their voting power should not affect the joining limit of this
             // epoch.
-            let validator_stake = (get_next_epoch_voting_power(stake_pool) as u128);
+            let validator_stake = 1; // NOTE: voting power is always 1 in Libra
             // total_joining_power should be larger than validator_stake but just in case there has been a small
             // rounding error somewhere that can lead to an underflow, we still want to allow this transaction to
             // succeed.
@@ -1255,50 +1257,31 @@ module aptos_framework::stake {
         );
     }
 
-    /// Calculate the rewards amount.
-    // TODO: v7 - remove this
-    fun calculate_rewards_amount(
-        stake_amount: u64,
-        num_successful_proposals: u64,
-        num_total_proposals: u64,
-        rewards_rate: u64,
-        rewards_rate_denominator: u64,
-    ): u64 {
-        spec {
-            // The following condition must hold because
-            // (1) num_successful_proposals <= num_total_proposals, and
-            // (2) `num_total_proposals` cannot be larger than 86400, the maximum number of proposals
-            //     in a day (1 proposal per second), and `num_total_proposals` is reset to 0 every epoch.
-            assume num_successful_proposals * MAX_REWARDS_RATE <= MAX_U64;
-        };
-        // The rewards amount is equal to (stake amount * rewards rate * performance multiplier).
-        // We do multiplication in u128 before division to avoid the overflow and minimize the rounding error.
-        let rewards_numerator = (stake_amount as u128) * (rewards_rate as u128) * (num_successful_proposals as u128);
-        let rewards_denominator = (rewards_rate_denominator as u128) * (num_total_proposals as u128);
-        if (rewards_denominator > 0) {
-            ((rewards_numerator / rewards_denominator) as u64)
-        } else {
-            0
-        };
-        0
-    }
+    // /// Calculate the rewards amount.
+    // // TODO: v7 - remove this
+    // fun calculate_rewards_amount(
+    //     stake_amount: u64,
+    //     num_successful_proposals: u64,
+    //     num_total_proposals: u64,
+    //     rewards_rate: u64,
+    //     rewards_rate_denominator: u64,
+    // ): u64 {
+
+    //     0
+    // }
 
     /// Mint rewards corresponding to current epoch's `stake` and `num_successful_votes`.
 
     // TODO: v7 - change this
     fun distribute_rewards(
         stake: &mut Coin<AptosCoin>,
-        num_successful_proposals: u64,
-        num_total_proposals: u64,
-        rewards_rate: u64,
-        rewards_rate_denominator: u64,
+        _num_successful_proposals: u64,
+        _num_total_proposals: u64,
+        _rewards_rate: u64,
+        _rewards_rate_denominator: u64,
     ): u64 acquires AptosCoinCapabilities {
-        let stake_amount = coin::value(stake);
-        let rewards_amount = if (stake_amount > 0) {
-            calculate_rewards_amount(stake_amount, num_successful_proposals, num_total_proposals, rewards_rate, rewards_rate_denominator)
-        } else {
-            0
-        };
+        // let _stake_amount = coin::value(stake);
+        let rewards_amount = 0;
         if (rewards_amount > 0) {
             let mint_cap = &borrow_global<AptosCoinCapabilities>(@aptos_framework).mint_cap;
             let rewards = coin::mint(rewards_amount, mint_cap);
@@ -1343,18 +1326,16 @@ module aptos_framework::stake {
 
     // TODO: v7 - remove this
 
-    fun get_next_epoch_voting_power(stake_pool: &StakePool): u64 {
-        let value_pending_active = coin::value(&stake_pool.pending_active);
-        let value_active = coin::value(&stake_pool.active);
-        let value_pending_inactive = coin::value(&stake_pool.pending_inactive);
-        spec {
-            assume value_pending_active + value_active + value_pending_inactive <= MAX_U64;
-        };
-        // value_pending_active + value_active + value_pending_inactive;
+    fun get_next_epoch_voting_power(_stake_pool: &StakePool): u64 {
+        // let value_pending_active = coin::value(&stake_pool.pending_active);
+        // let value_active = coin::value(&stake_pool.active);
+        // let value_pending_inactive = coin::value(&stake_pool.pending_inactive);
+        // spec {
+        //     assume value_pending_active + value_active + value_pending_inactive <= MAX_U64;
+        // };
+        // // value_pending_active + value_active + value_pending_inactive;
         1
     }
-
-    // TODO: v7 - remove this
 
     fun update_voting_power_increase(increase_amount: u64) acquires ValidatorSet {
         let validator_set = borrow_global_mut<ValidatorSet>(@aptos_framework);
@@ -1376,7 +1357,7 @@ module aptos_framework::stake {
         assert!(stake_pool_exists(pool_address), error::invalid_argument(ESTAKE_POOL_DOES_NOT_EXIST));
     }
 
-    // TODO: v7 - remove this
+    //////////// TESTNET ////////////
 
     /// This provides an ACL for Testnet purposes. In testnet, everyone is a whale, a whale can be a validator.
     /// This allows a testnet to bring additional entities into the validator set without compromising the

@@ -4,7 +4,7 @@
 
 #![forbid(unsafe_code)]
 
-mod genesis_context;
+pub mod genesis_context; //////// 0L ////////
 
 use crate::genesis_context::GenesisStateView;
 use aptos_crypto::{
@@ -281,7 +281,7 @@ pub fn encode_genesis_change_set(
         .expect("Constructing a ChangeSet from VMChangeSet should always succeed at genesis")
 }
 
-fn validate_genesis_config(genesis_config: &GenesisConfiguration) {
+pub fn validate_genesis_config(genesis_config: &GenesisConfiguration) { //////// 0L ////////
     assert!(
         genesis_config.min_stake <= genesis_config.max_stake,
         "Min stake must be smaller than or equal to max stake"
@@ -629,7 +629,7 @@ fn emit_new_block_and_epoch_event(session: &mut SessionExt) {
 }
 
 /// Verify the consistency of the genesis `WriteSet`
-fn verify_genesis_write_set(events: &[ContractEvent]) {
+pub fn verify_genesis_write_set(events: &[ContractEvent]) { //////// 0L ////////
     let new_epoch_events: Vec<&ContractEvent> = events
         .iter()
         .filter(|e| e.key() == &NewEpochEvent::event_key())
@@ -829,7 +829,7 @@ pub fn generate_mainnet_genesis(
     (genesis, test_validators)
 }
 
-fn mainnet_genesis_config() -> GenesisConfiguration {
+pub fn mainnet_genesis_config() -> GenesisConfiguration { //////// 0L ////////
     // TODO: Update once mainnet numbers are decided. These numbers are just placeholders.
     GenesisConfiguration {
         allow_new_validators: true,

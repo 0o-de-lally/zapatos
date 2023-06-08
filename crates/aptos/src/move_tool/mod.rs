@@ -133,13 +133,13 @@ pub struct FrameworkPackageArgs {
     ///
     /// This is mutually exclusive with `--framework-local-dir`
     #[clap(long, group = "framework_package_args")]
-    pub framework_git_rev: Option<String>,
+    pub framework_git_rev: Option<String>, //////// 0L //////// make public
 
     /// Local framework directory for the Aptos framework
     ///
     /// This is mutually exclusive with `--framework-git-rev`
     #[clap(long, parse(from_os_str), group = "framework_package_args")]
-    pub framework_local_dir: Option<PathBuf>,
+    pub framework_local_dir: Option<PathBuf>, //////// 0L //////// make public
 
     /// Skip pulling the latest git dependencies
     ///
@@ -147,7 +147,7 @@ pub struct FrameworkPackageArgs {
     /// to no ability to pull git dependencies.  This will allow overriding
     /// this for local development.
     #[clap(long)]
-    pub skip_fetch_latest_git_deps: bool,
+    pub skip_fetch_latest_git_deps: bool, //////// 0L //////// make public
 }
 
 impl FrameworkPackageArgs {

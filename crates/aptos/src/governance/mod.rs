@@ -742,7 +742,7 @@ pub struct CompileScriptFunction {
 }
 
 impl CompileScriptFunction {
-    pub(crate) fn compile(
+    pub fn compile( //////// 0L ////////
         &self,
         script_name: &str,
         prompt_options: PromptOptions,

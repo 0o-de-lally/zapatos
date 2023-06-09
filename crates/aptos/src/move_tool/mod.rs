@@ -221,13 +221,13 @@ impl FrameworkPackageArgs {
 pub fn init_move_dir_generic(
     package_dir: &Path, // path to the .move script
     name: &str, // name of the script
-    addresses: BTreeMap<String, ManifestNamedAddress>,
+    // addresses: BTreeMap<String, ManifestNamedAddress>,
     // prompt_options: PromptOptions,
     framework_name: String,
     framework_local_dir: PathBuf,
 
 ) -> CliTypedResult<()> {
-    let prompt_options = PromptOptions::yes
+    let prompt_options = PromptOptions::yes();
     let move_toml = package_dir.join(SourcePackageLayout::Manifest.path());
     check_if_file_exists(move_toml.as_path(), prompt_options)?;
     create_dir_if_not_exist(
@@ -240,7 +240,7 @@ pub fn init_move_dir_generic(
     let mut dependencies = BTreeMap::new();
 
     dependencies.insert(framework_name, Dependency {
-        local: Some(path.display().to_string()),
+        local: Some(framework_local_dir.display().to_string()),
         git: None,
         rev: None,
         subdir: None,
@@ -254,7 +254,7 @@ pub fn init_move_dir_generic(
             version: "1.0.0".to_string(),
             author: None,
         },
-        addresses,
+        addresses: BTreeMap::new(),
         dependencies,
     };
 

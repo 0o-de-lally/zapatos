@@ -19,6 +19,10 @@ pub mod transaction_context;
 pub mod type_info;
 pub mod util;
 
+//////// 0L ////////
+// trying to put the natives in this module. Since the move tool is not picking it up.
+pub mod ol_native_vdf;
+
 use crate::natives::cryptography::multi_ed25519;
 use aggregator_natives::{aggregator, aggregator_factory};
 use aptos_gas_algebra_ext::AbstractValueSize;
@@ -56,6 +60,7 @@ pub struct GasParameters {
     pub aggregator_factory: aggregator_factory::GasParameters,
     pub object: object::GasParameters,
     pub string_utils: string_utils::GasParameters,
+    // pub ol_native_vdf: ol_native_vdf::GasParameters,
 }
 
 impl GasParameters {
@@ -265,6 +270,10 @@ impl GasParameters {
                 base: 0.into(),
                 per_byte: 0.into(),
             },
+            // ol_native_vdf: ol_native_vdf::GasParameters {
+            //       base: 0.into(),
+            //       per_byte: 0.into(),
+            // },
         }
     }
 }
@@ -434,6 +443,9 @@ pub fn all_natives(
         "string_utils",
         string_utils::make_all(gas_params.string_utils, timed_features, features)
     );
+
+    add_natives_from_module!("ol_native_vdf", ol_native_vdf::make_all());
+
 
     make_table_from_iter(framework_addr, natives)
 }

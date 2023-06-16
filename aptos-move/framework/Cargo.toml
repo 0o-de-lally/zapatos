@@ -74,6 +74,9 @@ tempfile = { workspace = true }
 thiserror = { workspace = true }
 tiny-keccak = { workspace = true }
 
+# ///////// OL ////////
+vdf = "0.1.0"
+
 [dev-dependencies]
 aptos-cached-packages = { workspace = true }
 aptos-gas = { workspace = true }

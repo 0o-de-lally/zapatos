@@ -7,8 +7,8 @@ module aptos_std::ol_native_vdf {
     native public fun verify(
       challenge: &vector<u8>,
       solution: &vector<u8>,
-      difficulty: &u64,
-      security: &u64,
+      difficulty: u64,
+      security: u64,
       wesolowski_algo: bool, // else it will be pietrezak (from ol V5)
     ): bool;
 

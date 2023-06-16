@@ -18,23 +18,32 @@ use move_core_types::account_address::AccountAddress;
 
 #[inline]
 fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResult<NativeResult> {
+    // dbg!(&ty_args);
     debug_assert!(ty_args.is_empty());
+    // dbg!(&args);
     debug_assert!(args.len() == 5);
 
-    let wesolowski = pop_arg!(args, Reference).read_ref()?.value_as::<bool>()?; // will do pietrezak if `false`.
-    let security = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;
-    let difficulty = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;
+    dbg!(&args);
+
+
+    let wesolowski = pop_arg!(args, bool); // will do pietrezak if `false`.
+    dbg!(&wesolowski);
+    let security = pop_arg!(args, u64);
+    let difficulty = pop_arg!(args, u64);
     let solution = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
     let challenge = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
+
+    dbg!(&wesolowski);
+    dbg!(&difficulty);
 
     // refuse to try anything with a security parameter above 2048 for DOS risk.
     debug_assert!(difficulty < 2048);
 
     let result = if wesolowski {
-      let v = vdf::PietrzakVDFParams(security as u16).new();
+      let v = vdf::WesolowskiVDFParams(security as u16).new();
       v.verify(&challenge, difficulty, &solution)
     } else {
-      let v = vdf::WesolowskiVDFParams(security as u16).new();
+      let v = vdf::PietrzakVDFParams(security as u16).new();
       v.verify(&challenge, difficulty, &solution)
     };
 

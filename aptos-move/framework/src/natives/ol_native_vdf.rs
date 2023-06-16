@@ -19,7 +19,7 @@ use move_core_types::account_address::AccountAddress;
 #[inline]
 fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResult<NativeResult> {
     debug_assert!(ty_args.is_empty());
-    debug_assert!(args.len() == 4);
+    debug_assert!(args.len() == 5);
 
     let wesolowski = pop_arg!(args, Reference).read_ref()?.value_as::<bool>()?; // will do pietrezak if `false`.
     let security = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;

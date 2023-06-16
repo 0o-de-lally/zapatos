@@ -1,5 +1,3 @@
-// Copyright © Aptos Foundation
-
 // NOTE: 0L: These natives follow the pattern of the `debug` native. It is implemented differently than the other natives, in that the gas context is not used.
 
 use crate::natives::helpers::make_module_natives;

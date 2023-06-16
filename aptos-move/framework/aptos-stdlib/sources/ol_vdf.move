@@ -23,6 +23,7 @@ module aptos_std::ol_native_vdf {
         &vector::empty(),
         &100,
         &111,
+        // true
       );
 
       assert!(r == false, 100);

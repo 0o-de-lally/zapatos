@@ -1,12 +1,9 @@
 // Copyright © Aptos Foundation
 
-// Copyright (c) The Diem Core Contributors
-// Copyright (c) The Move Contributors
-// SPDX-License-Identifier: Apache-2.0
+// NOTE: 0L: These natives follow the pattern of the `debug` native. It is implemented differently than the other natives, in that the gas context is not used.
 
 use crate::natives::helpers::make_module_natives;
 use move_binary_format::errors::PartialVMResult;
-// use move_core_types::vm_status::StatusCode;
 use move_vm_runtime::native_functions::NativeFunction;
 #[allow(unused_imports)]
 use move_vm_types::{

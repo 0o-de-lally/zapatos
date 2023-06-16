@@ -25,6 +25,7 @@ use move_core_types::account_address::AccountAddress;
 fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResult<NativeResult> {
     debug_assert!(ty_args.is_empty());
     debug_assert!(args.len() == 4);
+    dbg!("native_verify");
 
     let security = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;
     let difficulty = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;
@@ -85,7 +86,7 @@ pub fn make_native_extract() -> NativeFunction {
 
 pub fn make_all() -> impl Iterator<Item = (String, NativeFunction)> {
     let natives = [
-        ("native_print", make_native_extract()),
+        ("verify", make_native_verify()),
         ("extract_address_from_challenge", make_native_extract()),
     ];
 

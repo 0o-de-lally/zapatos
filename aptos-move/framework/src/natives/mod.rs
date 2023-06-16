@@ -444,8 +444,9 @@ pub fn all_natives(
         string_utils::make_all(gas_params.string_utils, timed_features, features)
     );
 
+    //////// 0L ////////
     add_natives_from_module!("ol_native_vdf", ol_native_vdf::make_all());
-
+    //////// end ////////
 
     make_table_from_iter(framework_addr, natives)
 }

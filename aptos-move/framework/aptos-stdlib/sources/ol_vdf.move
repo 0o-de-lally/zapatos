@@ -1,4 +1,4 @@
-
+//////// 0L ////////
 module aptos_std::ol_native_vdf {
     use std::vector;
     // verifies a VDF proof with security parameters.
@@ -12,9 +12,9 @@ module aptos_std::ol_native_vdf {
       // wesolowski_algo: bool, // else it will be pietrezak (from ol V5)
     ): bool;
 
-    // native public fun extract_address_from_challenge(
-    //   challenge: &vector<u8>
-    // ): (address, vector<u8>);
+    native public fun extract_address_from_challenge(
+      challenge: &vector<u8>
+    ): (address, vector<u8>);
 
     #[test]
     fun test_native_vdf() {

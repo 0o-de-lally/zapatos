@@ -86,11 +86,6 @@ pub fn native_verify(
 
     let return_values = smallvec![Value::bool(result.is_ok())];
 
-    // temporary logging
-    // let latency = start_time.elapsed();
-    // metric_timer.observe_duration(); // 0L todo
-    // dbg!("vdf verification latency", &latency);
-
     let cost = gas_params.base; // 0L todo
     Ok(NativeResult::ok(cost, return_values))
 }

@@ -25,8 +25,8 @@ use move_core_types::account_address::AccountAddress;
 fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResult<NativeResult> {
     debug_assert!(ty_args.is_empty());
     debug_assert!(args.len() == 4);
-    dbg!("native_verify");
 
+    let wesolowski = pop_arg!(args, Reference).read_ref()?.value_as::<bool>()?; // will do pietrezak if `false`.
     let security = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;
     let difficulty = pop_arg!(args, Reference).read_ref()?.value_as::<u64>()?;
     let solution = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
@@ -35,8 +35,13 @@ fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResu
     // refuse to try anything with a security parameter above 2048 for DOS risk.
     debug_assert!(difficulty < 2048);
 
-    let v = vdf::PietrzakVDFParams(security as u16).new();
-    let result = v.verify(&challenge, difficulty, &solution);
+    let result = if wesolowski {
+      let v = vdf::PietrzakVDFParams(security as u16).new();
+      v.verify(&challenge, difficulty, &solution)
+    } else {
+      let v = vdf::WesolowskiVDFParams(security as u16).new();
+      v.verify(&challenge, difficulty, &solution)
+    };
 
     let return_values = smallvec![Value::bool(result.is_ok())];
 

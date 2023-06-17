@@ -91,3 +91,22 @@ pub fn make_all() -> impl Iterator<Item = (String, NativeFunction)> {
 
     make_module_natives(natives)
 }
+
+
+#[test]
+fn sanity_test_vdf() {
+  let security = 512u16;
+  let difficulty = 100;
+  let challenge = hex::decode("aa")?;
+  let solution = hex::decode("0051dfa4c3341c18197b72f5e5eecc693eb56d408206c206d90f5ec7a75f833b2affb0ea7280d4513ab8351f39362d362203ff3e41882309e7900f470f0a27eeeb7b")?;
+
+  let v = vdf::PietrzakVDFParams(security).new();
+  v.verify(&challenge, difficulty, &solution);
+}
+
+fn round_trip() {
+    let pietrzak_vdf = vdf::PietrzakVDFParams(2048).new();
+    let solution = pietrzak_vdf.solve(b"\xaa", 100).unwrap();
+    dbg!(&solution);
+    assert!(pietrzak_vdf.verify(b"\xaa", 100, solution).is_ok());
+}

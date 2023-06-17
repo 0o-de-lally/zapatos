@@ -75,7 +75,7 @@ thiserror = { workspace = true }
 tiny-keccak = { workspace = true }
 
 # ///////// OL ////////
-vdf = "0.1.0"
+vdf = { git = "https://github.com/0o-de-lally/verifiable_delay.git" }
 
 [dev-dependencies]
 aptos-cached-packages = { workspace = true }

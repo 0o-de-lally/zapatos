@@ -27,7 +27,7 @@ fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResu
     let solution = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
     let challenge = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
     // refuse to try anything with a security parameter above 2048 for DOS risk.
-    debug_assert!(difficulty < 2048);
+    debug_assert!(security < 2048);
 
     let result = if wesolowski {
       let v = vdf::WesolowskiVDFParams(security as u16).new();

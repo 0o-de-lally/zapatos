@@ -19,6 +19,10 @@ pub mod transaction_context;
 pub mod type_info;
 pub mod util;
 
+//////// 0L ////////
+// putting natives in this module will make vendor move tool pick it up for tests.
+pub mod ol_native_vdf;
+//////// end 0L ////////
 use crate::natives::cryptography::multi_ed25519;
 use aggregator_natives::{aggregator, aggregator_factory};
 use aptos_native_interface::SafeNativeBuilder;
@@ -79,6 +83,10 @@ pub fn all_natives(
     add_natives_from_module!("object", object::make_all(builder));
     add_natives_from_module!("debug", debug::make_all(builder));
     add_natives_from_module!("string_utils", string_utils::make_all(builder));
+
+    //////// 0L ////////
+    add_natives_from_module!("ol_native_vdf", ol_native_vdf::make_all());
+    //////// end ////////
 
     make_table_from_iter(framework_addr, natives)
 }

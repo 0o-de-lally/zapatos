@@ -14,7 +14,8 @@ use smallvec::smallvec;
 use vdf::{VDFParams, VDF};
 use std::{collections::VecDeque, sync::Arc};
 
-use move_core_types::account_address::AccountAddress;
+use move_core_types::{account_address::AccountAddress, vm_status::StatusCode};
+
 
 #[inline]
 fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResult<NativeResult> {
@@ -26,13 +27,25 @@ fn native_verify(ty_args: Vec<Type>, mut args: VecDeque<Value>) -> PartialVMResu
     let difficulty = pop_arg!(args, u64);
     let solution = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
     let challenge = pop_arg!(args, Reference).read_ref()?.value_as::<Vec<u8>>()?;
-    // refuse to try anything with a security parameter above 2048 for DOS risk.
-    debug_assert!(security < 2048);
+
+    // refuse to try anything with a security parameter above 2048 or a difficulty above 3_000_000_001 (which is the target on Wesolowski)
+    if (security > 2048) || (difficulty > 3_000_000_001) {
+      return Ok(NativeResult::err(0.into(), StatusCode::EXCEEDED_MAX_TRANSACTION_SIZE.into()));
+    }
 
     let result = if wesolowski {
+      if difficulty > 3_000_000_001 {
+        return Ok(NativeResult::err(0.into(), StatusCode::EXCEEDED_MAX_TRANSACTION_SIZE.into()));
+      }
+
       let v = vdf::WesolowskiVDFParams(security as u16).new();
       v.verify(&challenge, difficulty, &solution)
     } else {
+
+      if difficulty > 900_000_000 {
+        return Ok(NativeResult::err(0.into(), StatusCode::EXCEEDED_MAX_TRANSACTION_SIZE.into()));
+      }
+
       let v = vdf::PietrzakVDFParams(security as u16).new();
       v.verify(&challenge, difficulty, &solution)
     };

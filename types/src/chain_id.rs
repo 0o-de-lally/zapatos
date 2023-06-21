@@ -10,7 +10,7 @@ use std::{convert::TryFrom, fmt, str::FromStr};
 /// When signing transactions for such chains, the numerical chain ID should still be used
 /// (e.g. MAINNET has numeric chain ID 1, TESTNET has chain ID 2, etc)
 #[repr(u8)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Serialize, Deserialize)] //////// 0L ////////
 pub enum NamedChain {
     /// Users might accidentally initialize the ChainId field to 0, hence reserving ChainId 0 for accidental
     /// initialization.

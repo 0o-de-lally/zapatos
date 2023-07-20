@@ -169,10 +169,10 @@ impl Client {
     pub fn put(&self, path: &str, content: &str) -> Result<(), Error> {
         let json = match self.get_sha(path) {
             Ok(hash) => {
-                json!({ "branch": self.branch.to_string(), "content": content, "message": format!("[aptos-management] {}", path), "sha": hash })
+                json!({ "branch": self.branch.to_string(), "content": content, "message": format!("[genesis-management] {}", path), "sha": hash })
             },
             Err(Error::NotFound(_)) => {
-                json!({ "branch": self.branch.to_string(), "content": content, "message": format!("[aptos-management] {}", path) })
+                json!({ "branch": self.branch.to_string(), "content": content, "message": format!("[genesis-management] {}", path) })
             },
             Err(e) => return Err(e),
         };

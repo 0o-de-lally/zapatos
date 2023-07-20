@@ -196,12 +196,12 @@ impl TryFrom<ValidatorConfiguration> for Validator {
         let auth_key = AuthenticationKey::ed25519(&config.owner_account_public_key);
         let derived_address = auth_key.derived_address();
         let owner_address = AccountAddress::from(config.owner_account_address);
-        if owner_address != derived_address {
-            return Err(anyhow::Error::msg(format!(
-                "owner_account_address {} does not match account key derived one {}",
-                owner_address, derived_address
-            )));
-        }
+        // if owner_address != derived_address {
+        //     return Err(anyhow::Error::msg(format!(
+        //         "owner_account_address {} does not match account key derived one {}",
+        //         owner_address, derived_address
+        //     )));
+        // }
 
         let auth_key = AuthenticationKey::ed25519(&config.operator_account_public_key);
         let derived_address = auth_key.derived_address();

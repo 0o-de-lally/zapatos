@@ -193,6 +193,9 @@ impl TryFrom<ValidatorConfiguration> for Validator {
             vec![]
         };
 
+        //////// 0L ////////
+        // we are removing this check for the case of V5->V7 upgrades since the legacy key will not match derived key in this case. Plus 0L uses the same validator/operator/voter account as the validator account.
+
         let auth_key = AuthenticationKey::ed25519(&config.owner_account_public_key);
         let derived_address = auth_key.derived_address();
         let owner_address = AccountAddress::from(config.owner_account_address);
@@ -206,22 +209,22 @@ impl TryFrom<ValidatorConfiguration> for Validator {
         let auth_key = AuthenticationKey::ed25519(&config.operator_account_public_key);
         let derived_address = auth_key.derived_address();
         let operator_address = AccountAddress::from(config.operator_account_address);
-        if operator_address != derived_address {
-            return Err(anyhow::Error::msg(format!(
-                "operator_account_address {} does not match account key derived one {}",
-                operator_address, derived_address
-            )));
-        }
+        // if operator_address != derived_address {
+        //     return Err(anyhow::Error::msg(format!(
+        //         "operator_account_address {} does not match account key derived one {}",
+        //         operator_address, derived_address
+        //     )));
+        // }
 
         let auth_key = AuthenticationKey::ed25519(&config.voter_account_public_key);
         let derived_address = auth_key.derived_address();
         let voter_address = AccountAddress::from(config.voter_account_address);
-        if voter_address != derived_address {
-            return Err(anyhow::Error::msg(format!(
-                "voter_account_address {} does not match account key derived one {}",
-                voter_address, derived_address
-            )));
-        }
+        // if voter_address != derived_address {
+        //     return Err(anyhow::Error::msg(format!(
+        //         "voter_account_address {} does not match account key derived one {}",
+        //         voter_address, derived_address
+        //     )));
+        // }
 
         let consensus_pubkey = if let Some(consensus_public_key) = config.consensus_public_key {
             consensus_public_key.to_bytes().to_vec()

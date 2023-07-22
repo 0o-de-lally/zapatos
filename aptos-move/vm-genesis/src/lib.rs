@@ -916,7 +916,7 @@ pub fn test_genesis_module_publishing() {
     .unwrap();
     let id1 = HashValue::zero();
     let mut session = move_vm.new_session(&data_cache, SessionId::genesis(id1));
-    publish_framework(&mut session, aptos_cached_packages::head_release_bundle());
+    publish_framework(&mut session, &aptos_cached_packages::head_release_bundle());
 }
 
 #[test]
@@ -1109,7 +1109,7 @@ pub fn test_mainnet_end_to_end() {
         &accounts,
         &employees,
         &validators,
-        aptos_cached_packages::head_release_bundle(),
+        &aptos_cached_packages::head_release_bundle(),
         ChainId::mainnet(),
         &mainnet_genesis_config(),
     );

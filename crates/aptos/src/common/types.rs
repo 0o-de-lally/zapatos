@@ -638,6 +638,7 @@ impl PublicKeyInputOptions {
     }
 }
 
+
 impl ExtractPublicKey for PublicKeyInputOptions {
     fn extract_public_key(
         &self,

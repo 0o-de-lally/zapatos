@@ -32,7 +32,7 @@ jobs:
 ######## BUILD ########
 
       - name: cargo release build
-        run: cargo b --release --tests
+        run: cargo b --release -p aptos -p aptos-node
 
 ######## PUBLISH ########
 
@@ -41,7 +41,7 @@ jobs:
         with:
           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
           # Note that glob pattern is not supported yet.
-          bin: zapatos-node, zapatos
+          bin: aptos, aptos-node
           # (required) GitHub token for uploading assets to GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
 

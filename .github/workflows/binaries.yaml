@@ -18,11 +18,16 @@ jobs:
           components: rustfmt
 
 ######## CACHE ########
-
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - name: apt packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: build-essential lld pkg-config libclang-dev libwebkit2gtk-4.0-dev libglib2.0-* libssl-dev libgtk-3-dev libappindicator3-dev patchelf librsvg2-dev libvips-dev libgmp-dev
+          packages: build-essential ca-certificates clang curl git libpq-dev libssl-dev pkg-config lsof lld libgmp-dev
           version: 1.0
+      - name: install protoc and related tools
+        shell: bash
+        run: scripts/dev_setup.sh -b -r
+
+
       - uses: actions/checkout@v3
       - uses: Swatinem/rust-cache@v2
         with:

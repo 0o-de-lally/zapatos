@@ -1,0 +1,47 @@
+name: binaries
+
+on:
+  push:
+    # tags:
+      # - '*'
+    branches:
+      - 'ci'
+jobs:
+  publish:
+    strategy:
+      fail-fast: true
+    name: publish
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: dtolnay/rust-toolchain@1.66.1
+        with:
+          components: rustfmt
+
+######## CACHE ########
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: build-essential lld pkg-config libclang-dev libwebkit2gtk-4.0-dev libglib2.0-* libssl-dev libgtk-3-dev libappindicator3-dev patchelf librsvg2-dev libvips-dev libgmp-dev
+          version: 1.0
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+          cache-on-failure: true
+
+######## BUILD ########
+
+      - name: cargo release build
+        run: cargo b --release --tests
+
+######## PUBLISH ########
+
+      - name: publish
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
+          # Note that glob pattern is not supported yet.
+          bin: zapatos-node, zapatos
+          # (required) GitHub token for uploading assets to GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}
+

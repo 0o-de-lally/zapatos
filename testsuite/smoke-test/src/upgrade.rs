@@ -23,7 +23,7 @@ use std::{fs, path::PathBuf, process::Command, sync::Arc};
 
 // Ignored. This is redundant with the forge compat test but this test is easier to run locally and
 // could help debug much faster
-#[ignore]
+// #[ignore]
 // TODO: currently fails when quorum store is enabled by hard-coding. Investigate why.
 #[tokio::test]
 /// This test verifies the flow of aptos framework upgrade process.

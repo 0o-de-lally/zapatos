@@ -17,7 +17,7 @@ jobs:
         uses: johnwason/vcpkg-action@v5
         id: vcpkg
         with:
-          pkgs: boost-date-time boost-system
+          pkgs: gmp
           triplet: x64-windows-release
           token: ${{ github.token }}
 #       # - uses: dtolnay/rust-toolchain@1.66.1

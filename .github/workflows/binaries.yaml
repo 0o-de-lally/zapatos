@@ -5,48 +5,50 @@ on:
     # tags:
       # - '*'
     branches:
-      - 'ci'
+      - 'ci-win'
 jobs:
   publish:
     strategy:
       fail-fast: true
     name: publish
-    runs-on: ubuntu-20.04
+    runs-on: windows-latest
     steps:
-      - uses: dtolnay/rust-toolchain@1.66.1
-        with:
-          components: rustfmt
+      - name: install gmp
+        run: ./vcpkg install gmp
+#       # - uses: dtolnay/rust-toolchain@1.66.1
+#       #   with:
+#       #     components: rustfmt
 
-######## CACHE ########
-      - name: apt packages
-        uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: build-essential ca-certificates clang curl git libpq-dev libssl-dev pkg-config lsof lld libgmp-dev
-          version: 1.0
-      - name: install protoc and related tools
-        shell: bash
-        run: scripts/dev_setup.sh -b -r
+# ######## CACHE ########
+#       - name: apt packages
+#         uses: awalsh128/cache-apt-pkgs-action@latest
+#         with:
+#           packages: build-essential ca-certificates clang curl git libpq-dev libssl-dev pkg-config lsof lld libgmp-dev
+#           version: 1.0
+#       - name: install protoc and related tools
+#         shell: bash
+#         run: scripts/dev_setup.sh -b -r
 
 
-      - uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-all-crates: true
-          cache-on-failure: true
+#       - uses: actions/checkout@v3
+#       - uses: Swatinem/rust-cache@v2
+#         with:
+#           cache-all-crates: true
+#           cache-on-failure: true
 
-######## BUILD ########
+# ######## BUILD ########
 
-      - name: cargo release build
-        run: cargo b --release -p aptos -p aptos-node
+#       - name: cargo release build
+#         run: cargo b --release -p aptos -p aptos-node
 
-######## PUBLISH ########
+# ######## PUBLISH ########
 
-      - name: publish
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
-          # Note that glob pattern is not supported yet.
-          bin: aptos, aptos-node
-          # (required) GitHub token for uploading assets to GitHub Releases.
-          token: ${{ secrets.GITHUB_TOKEN }}
+#       - name: publish
+#         uses: taiki-e/upload-rust-binary-action@v1
+#         with:
+#           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
+#           # Note that glob pattern is not supported yet.
+#           bin: aptos, aptos-node
+#           # (required) GitHub token for uploading assets to GitHub Releases.
+#           token: ${{ secrets.GITHUB_TOKEN }}
 

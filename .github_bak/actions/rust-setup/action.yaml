@@ -19,9 +19,9 @@ runs:
     - name: Run cargo cache
       uses: Swatinem/rust-cache@359a70e43a0bb8a13953b04a90f76428b4959bb6 # pin@v2.2.0
 
-    - name: install protoc and related tools
-      shell: bash
-      run: ./scripts/dev_setup.sh -b -r
+    # - name: install protoc and related tools
+    #   shell: bash
+    #   run: ./scripts/dev_setup.sh -b -r
 
     - run: echo "/home/runner/.cargo/bin" | tee -a $GITHUB_PATH
       shell: bash

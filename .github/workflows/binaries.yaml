@@ -23,9 +23,9 @@ jobs:
         with:
           packages: build-essential ca-certificates clang curl git libpq-dev libssl-dev pkg-config lsof lld libgmp-dev
           version: 1.0
-      - name: install protoc and related tools
-        shell: bash
-        run: scripts/dev_setup.sh -b -r
+      # - name: install protoc and related tools
+      #   shell: bash
+      #   run: ./scripts/dev_setup.sh -b -r
 
 
       - uses: actions/checkout@v3

@@ -13,8 +13,13 @@ jobs:
     name: publish
     runs-on: windows-latest
     steps:
-      - name: install gmp
-        run: ./vcpkg install gmp
+      - name: vcpkg build
+        uses: johnwason/vcpkg-action@v5
+        id: vcpkg
+        with:
+          pkgs: boost-date-time boost-system
+          triplet: x64-windows-release
+          token: ${{ github.token }}
 #       # - uses: dtolnay/rust-toolchain@1.66.1
 #       #   with:
 #       #     components: rustfmt

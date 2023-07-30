@@ -37,7 +37,7 @@ jobs:
 ######## BUILD ########
 
       - name: cargo release build
-        run: cargo check -p aptos-move
+        run: cargo build -p aptos-framework
 
 ######## PUBLISH ########
 

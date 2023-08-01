@@ -37,7 +37,7 @@ jobs:
 ######## BUILD ########
 
       - name: cargo release build
-        run: cargo b --release -p aptos -p aptos-node
+        run: cargo b --release -p aptos-node
 
 ######## PUBLISH ########
 

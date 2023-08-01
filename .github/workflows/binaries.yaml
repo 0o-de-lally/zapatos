@@ -28,11 +28,16 @@ jobs:
       #   run: ./scripts/dev_setup.sh -b -r
 
 
-      - uses: actions/checkout@v3
-      - uses: Swatinem/rust-cache@v2
+      # - uses: actions/checkout@v3
+      # - uses: Swatinem/rust-cache@v2
+      #   with:
+      #     cache-all-crates: true
+      #     cache-on-failure: true
+      - uses: bmwill/rust-cache@842ef286fff290e445b90b4002cc9807c3669641 # Fork of 'Swatinem/rust-cache' which allows caching additional paths
         with:
-          cache-all-crates: true
-          cache-on-failure: true
+          path: |
+            ~/.cargo/registry/src/**/librocksdb-sys-*
+            ~/.cargo/registry/src/**/jemalloc-sys-*
 
 ######## BUILD ########
 

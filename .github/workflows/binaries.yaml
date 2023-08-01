@@ -2,8 +2,8 @@ name: binaries
 
 on:
   push:
-    # tags:
-      # - '*'
+    tags:
+      - '*'
     branches:
       - 'ci'
 jobs:
@@ -46,7 +46,7 @@ jobs:
         with:
           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
           # Note that glob pattern is not supported yet.
-          bin: aptos, aptos-node
+          bin: aptos-node
           # (required) GitHub token for uploading assets to GitHub Releases.
           token: ${{ secrets.GITHUB_TOKEN }}
 

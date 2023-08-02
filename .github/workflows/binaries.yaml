@@ -1,4 +1,4 @@
-name: binaries
+name: publish node binary
 
 on:
   push:
@@ -16,26 +16,24 @@ jobs:
           components: rustfmt
 
 ######## CACHE ########
-      - name: apt packages
+      - name: system packages
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: build-essential ca-certificates clang curl git libpq-dev libssl-dev pkg-config lsof lld libgmp-dev
           version: 1.0
-      # - name: install protoc and related tools
-      #   shell: bash
-      #   run: ./scripts/dev_setup.sh -b -r
 
-      - uses: actions/checkout@v3
 
-      # - uses: Swatinem/rust-cache@v2
-      #   with:
-      #     cache-all-crates: true
-      #     cache-on-failure: true
-      - uses: bmwill/rust-cache@842ef286fff290e445b90b4002cc9807c3669641 # Fork of 'Swatinem/rust-cache' which allows caching additional paths
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: checkout
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry/src/**/librocksdb-sys-*
-            ~/.cargo/registry/src/**/jemalloc-sys-*
+          cache-all-crates: true
+          cache-on-failure: true
+
+      - name: mtime restore (not sure this does anything)
+        uses: chetan/git-restore-mtime-action@v2
 
 ######## BUILD ########
 

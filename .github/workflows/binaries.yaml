@@ -1,5 +1,4 @@
 name: publish node binary
-
 on:
   push:
     tags:

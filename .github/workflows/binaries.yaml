@@ -3,9 +3,7 @@ name: binaries
 on:
   push:
     tags:
-      - '*'
-    branches:
-      - 'ci'
+     - v[0-9]+.*
 jobs:
   publish:
     strategy:

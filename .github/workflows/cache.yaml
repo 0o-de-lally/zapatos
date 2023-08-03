@@ -28,7 +28,7 @@ jobs:
       - name: caching
         uses: Swatinem/rust-cache@v2
         with:
-          cache-all-crates: true
+          shared-key: "zapatos" # to share across CI builds, so it is not job-id specific
           cache-on-failure: true
 
       - name: mtime restore (not sure this does anything)

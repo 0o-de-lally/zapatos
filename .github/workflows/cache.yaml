@@ -1,5 +1,6 @@
 name: publish node binary
 on:
+  workflow_call:
   push:
     branches: ["ci"]
 jobs:

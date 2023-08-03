@@ -1,8 +1,7 @@
 name: publish node binary
 on:
   push:
-    tags:
-     - v[0-9]+.*
+    branches: ["ci"]
 jobs:
   publish:
     strategy:
@@ -39,14 +38,4 @@ jobs:
       - name: cargo release build
         run: cargo b --release -p aptos-node
 
-######## PUBLISH ########
-
-      - name: publish
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
-          # Note that glob pattern is not supported yet.
-          bin: aptos-node
-          # (required) GitHub token for uploading assets to GitHub Releases.
-          token: ${{ secrets.GITHUB_TOKEN }}
 

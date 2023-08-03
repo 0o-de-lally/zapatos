@@ -1,0 +1,47 @@
+name: publish node binary
+on:
+  push:
+    tags:
+     - v[0-9]+.*
+jobs:
+  ######## Build again if we don't have a cache
+  heat:
+    uses: ./.github/workflows/cache.yaml
+
+  publish:
+    strategy:
+      fail-fast: true
+    name: publish
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: dtolnay/rust-toolchain@1.66.1
+        with:
+          components: rustfmt
+
+######## CACHE ########
+      - name: system packages
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: build-essential ca-certificates clang curl git libpq-dev libssl-dev pkg-config lsof lld libgmp-dev
+          version: 1.0
+
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+          cache-on-failure: true
+
+######## PUBLISH ########
+
+      - name: publish
+        uses: taiki-e/upload-rust-binary-action@v1
+        with:
+          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
+          # Note that glob pattern is not supported yet.
+          bin: aptos-node
+          # (required) GitHub token for uploading assets to GitHub Releases.
+          token: ${{ secrets.GITHUB_TOKEN }}
+

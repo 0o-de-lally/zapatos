@@ -1,10 +1,10 @@
-name: publish node binary
+name: build and cache
 on:
   workflow_call:
   push:
     branches: ["ci"]
 jobs:
-  publish:
+  build_cache:
     strategy:
       fail-fast: true
     name: publish

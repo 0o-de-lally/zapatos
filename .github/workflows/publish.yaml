@@ -9,6 +9,7 @@ jobs:
     uses: ./.github/workflows/cache.yaml
 
   publish:
+    needs: heat
     strategy:
       fail-fast: true
     name: publish

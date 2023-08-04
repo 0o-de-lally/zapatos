@@ -35,6 +35,8 @@ jobs:
           shared-key: "zapatos" # to share across CI builds, so it is not job-id specific
           cache-on-failure: true
 
+      - name: cargo release build
+        run: cargo b --release -p aptos-node
 ######## PUBLISH ########
 
       - name: publish

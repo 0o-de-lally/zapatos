@@ -2,6 +2,8 @@ name: Delete old workflow runs
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["ci"]
     # inputs:
     #   days:
     #     description: 'Number of days.'

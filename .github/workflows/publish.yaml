@@ -34,8 +34,25 @@ jobs:
           shared-key: "zapatos" # to share across CI builds, so it is not job-id specific
           cache-on-failure: true
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: cargo release build
-        run: cargo b --release -p aptos-node
+      # size optimized binary with profile.cli
+        run: cargo b --profile cli -p aptos-node
 
 ######## PUBLISH ########
 

@@ -6,7 +6,7 @@ on:
 jobs:
   publish:
     permissions:
-      actions: write
+      contents: write
     # needs: heat
     strategy:
       fail-fast: true

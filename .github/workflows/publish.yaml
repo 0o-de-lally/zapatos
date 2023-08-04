@@ -1,13 +1,9 @@
-name: publish node binary
+name: node bin
 on:
   push:
     tags:
      - v[0-9]+.*
 jobs:
-  ######## Build again if we don't have a cache
-  # heat:
-    # uses: ./.github/workflows/cache.yaml
-
   publish:
     # needs: heat
     strategy:
@@ -32,11 +28,13 @@ jobs:
       - name: caching
         uses: Swatinem/rust-cache@v2
         with:
+          prefix-key: "v1"
           shared-key: "zapatos" # to share across CI builds, so it is not job-id specific
           cache-on-failure: true
 
       - name: cargo release build
         run: cargo b --release -p aptos-node
+
 ######## PUBLISH ########
 
       - name: publish
@@ -47,13 +45,3 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
-
-      # - name: publish
-    #   uses: taiki-e/upload-rust-binary-action@v1
-      #   with:
-      #     # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
-      #     # Note that glob pattern is not supported yet.
-      #     bin: aptos-node
-      #     # (required) GitHub token for uploading assets to GitHub Releases.
-      #     token: ${{ secrets.GITHUB_TOKEN }}
-

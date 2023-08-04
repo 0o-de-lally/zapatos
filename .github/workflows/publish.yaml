@@ -5,11 +5,11 @@ on:
      - v[0-9]+.*
 jobs:
   ######## Build again if we don't have a cache
-  heat:
-    uses: ./.github/workflows/cache.yaml
+  # heat:
+    # uses: ./.github/workflows/cache.yaml
 
   publish:
-    needs: heat
+    # needs: heat
     strategy:
       fail-fast: true
     name: publish
@@ -38,11 +38,20 @@ jobs:
 ######## PUBLISH ########
 
       - name: publish
-        uses: taiki-e/upload-rust-binary-action@v1
+        uses: svenstaro/upload-release-action@v2
         with:
-          # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
-          # Note that glob pattern is not supported yet.
-          bin: aptos-node
-          # (required) GitHub token for uploading assets to GitHub Releases.
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/aptos-node
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+
+      # - name: publish
+    #   uses: taiki-e/upload-rust-binary-action@v1
+      #   with:
+      #     # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
+      #     # Note that glob pattern is not supported yet.
+      #     bin: aptos-node
+      #     # (required) GitHub token for uploading assets to GitHub Releases.
+      #     token: ${{ secrets.GITHUB_TOKEN }}
 

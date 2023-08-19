@@ -85,7 +85,7 @@ pub fn all_natives(
     add_natives_from_module!("string_utils", string_utils::make_all(builder));
 
     //////// 0L ////////
-    add_natives_from_module!("ol_native_vdf", ol_native_vdf::make_all());
+    add_natives_from_module!("ol_native_vdf", ol_native_vdf::make_all(builder));
     //////// end ////////
 
     make_table_from_iter(framework_addr, natives)

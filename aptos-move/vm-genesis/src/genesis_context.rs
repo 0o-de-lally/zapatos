@@ -16,7 +16,7 @@ use move_core_types::language_storage::ModuleId;
 use std::collections::HashMap;
 
 // `StateView` has no data given we are creating the genesis
-pub(crate) struct GenesisStateView {
+pub struct GenesisStateView { //////// 0L //////// make public
     state_data: HashMap<StateKey, Vec<u8>>,
 }
 

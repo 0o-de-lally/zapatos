@@ -1613,7 +1613,7 @@ impl VMValidator for AptosVM {
 }
 
 impl VMAdapter for AptosVM {
-    pub fn new_session<'r>( //////// 0L ////////
+    fn new_session<'r>(
         &self,
         resolver: &'r impl MoveResolverExt,
         session_id: SessionId,

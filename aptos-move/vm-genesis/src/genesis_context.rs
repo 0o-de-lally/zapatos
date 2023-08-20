@@ -21,13 +21,13 @@ pub struct GenesisStateView { //////// 0L //////// make public
 }
 
 impl GenesisStateView {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self { //////// 0L //////// make public
         Self {
             state_data: HashMap::new(),
         }
     }
 
-    pub(crate) fn add_module(&mut self, module_id: &ModuleId, blob: &[u8]) {
+    pub fn add_module(&mut self, module_id: &ModuleId, blob: &[u8]) { //////// 0L //////// make public
         self.state_data.insert(
             StateKey::access_path(AccessPath::from(module_id)),
             blob.to_vec(),

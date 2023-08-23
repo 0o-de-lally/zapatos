@@ -1,4 +1,4 @@
-name: node bin
+name: node-bins
 on:
   push:
     tags:

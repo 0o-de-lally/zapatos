@@ -54,8 +54,12 @@ jobs:
           swap-storage: true
 
       - name: cargo release build
-      # size optimized binary with profile.cli
-        run: cargo b --profile cli -p aptos-node -p aptos
+        # size optimized binary with profile.cli
+        run: cargo b --profile cli -p aptos
+
+      - name: cargo release build
+        # performance optimized
+        run: cargo b --profile performance -p aptos-node
 
 ######## PUBLISH ########
 

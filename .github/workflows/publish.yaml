@@ -53,11 +53,11 @@ jobs:
           docker-images: true
           swap-storage: true
 
-      - name: cargo release build
+      - name: cargo buid cli
         # size optimized binary with profile.cli
         run: cargo b --profile cli -p aptos
 
-      - name: cargo release build
+      - name: cargo build node
         # performance optimized
         run: cargo b --profile performance -p aptos-node
 
@@ -67,7 +67,16 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: target/cli/aptos*
+          file: target/**/aptos
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+
+      - name: publish
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/**/aptos-node
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true

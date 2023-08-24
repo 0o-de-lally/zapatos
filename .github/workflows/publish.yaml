@@ -58,8 +58,7 @@ jobs:
         run: cargo b --profile cli -p aptos
 
       - name: cargo build node
-        # performance optimized
-        run: cargo b --profile performance -p aptos-node
+        run: cargo b --profile cli -p aptos-node
 
 ######## PUBLISH ########
 

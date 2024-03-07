@@ -15254,6 +15254,7 @@ dependencies = [
  "hex",
  "hyper",
  "move-core-types",
+ "move-vm-types",
  "num-traits",
  "num_cpus",
  "once_cell",

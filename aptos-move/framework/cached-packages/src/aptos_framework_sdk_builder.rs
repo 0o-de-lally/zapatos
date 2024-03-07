@@ -588,6 +588,12 @@ pub enum EntryFunctionCall {
         code: Vec<Vec<u8>>,
     },
 
+    ReproDeserializeMaybeAborts {
+        addr: AccountAddress,
+    },
+
+    ReproDeserializeShouldInitStruct {},
+
     /// Creates a new resource account and rotates the authentication key to either
     /// the optional auth key if it is non-empty (though auth keys are 32-bytes)
     /// or the source accounts current auth key.
@@ -1263,6 +1269,8 @@ impl EntryFunctionCall {
                 metadata_serialized,
                 code,
             } => object_code_deployment_publish(metadata_serialized, code),
+            ReproDeserializeMaybeAborts { addr } => repro_deserialize_maybe_aborts(addr),
+            ReproDeserializeShouldInitStruct {} => repro_deserialize_should_init_struct(),
             ResourceAccountCreateResourceAccount {
                 seed,
                 optional_auth_key,
@@ -3007,6 +3015,36 @@ pub fn object_code_deployment_publish(
             bcs::to_bytes(&metadata_serialized).unwrap(),
             bcs::to_bytes(&code).unwrap(),
         ],
+    ))
+}
+
+pub fn repro_deserialize_maybe_aborts(addr: AccountAddress) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("repro_deserialize").to_owned(),
+        ),
+        ident_str!("maybe_aborts").to_owned(),
+        vec![],
+        vec![bcs::to_bytes(&addr).unwrap()],
+    ))
+}
+
+pub fn repro_deserialize_should_init_struct() -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("repro_deserialize").to_owned(),
+        ),
+        ident_str!("should_init_struct").to_owned(),
+        vec![],
+        vec![],
     ))
 }
 
@@ -4974,6 +5012,28 @@ mod decoder {
         }
     }
 
+    pub fn repro_deserialize_maybe_aborts(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::ReproDeserializeMaybeAborts {
+                addr: bcs::from_bytes(script.args().get(0)?).ok()?,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn repro_deserialize_should_init_struct(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(_script) = payload {
+            Some(EntryFunctionCall::ReproDeserializeShouldInitStruct {})
+        } else {
+            None
+        }
+    }
+
     pub fn resource_account_create_resource_account(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
@@ -5904,6 +5964,14 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "object_code_deployment_publish".to_string(),
             Box::new(decoder::object_code_deployment_publish),
+        );
+        map.insert(
+            "repro_deserialize_maybe_aborts".to_string(),
+            Box::new(decoder::repro_deserialize_maybe_aborts),
+        );
+        map.insert(
+            "repro_deserialize_should_init_struct".to_string(),
+            Box::new(decoder::repro_deserialize_should_init_struct),
         );
         map.insert(
             "resource_account_create_resource_account".to_string(),

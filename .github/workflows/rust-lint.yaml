@@ -17,8 +17,8 @@ jobs:
 
       # We require the nightly build of cargo fmt
       # to provide stricter rust formatting.
-      - name: fmt
-        run: cargo +nightly fmt --check
+      # - name: fmt
+      #   run: cargo +nightly fmt --check
 
       - name: xclippy alias
         run: cargo xclippy

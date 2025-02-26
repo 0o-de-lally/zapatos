@@ -15,18 +15,10 @@ jobs:
       - name: setup env
         uses: ./.github/actions/build_env
 
-      - name: format
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+      # We require the nightly build of cargo fmt
+      # to provide stricter rust formatting.
+      - name: fmt
+        run: cargo +nightly fmt --check
 
-      # TODO: clippy can share cache if build for tests is done prior
-      # - name: build for cache
-      #   run: cargo build --tests --workspace
-
-      - name: clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace --tests -- -D warnings
+      - name: xclippy alias
+        run: cargo xclippy

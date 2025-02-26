@@ -1,5 +1,5 @@
 # testing future versions of rust
-name: rust-versions
+name: rust-lint
 on:
   push:
     branches: ["ci*"] # glob pattern to allow slash /

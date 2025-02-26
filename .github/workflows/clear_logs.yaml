@@ -1,11 +1,7 @@
-name: Delete old workflow runs
+name: delete-logs
 
-on:
-  schedule:
-  - cron: "0 * * * *"
-  push:
-    branches:
-      - "ci"
+on: workflow_dispatch
+
 jobs:
   del_runs:
     runs-on: ubuntu-latest

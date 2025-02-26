@@ -1,0 +1,32 @@
+# testing future versions of rust
+name: rust-versions
+on:
+  push:
+    branches: ["ci*"] # glob pattern to allow slash /
+  schedule:
+    - cron: "30 00 * * *"
+
+jobs:
+  lints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup env
+        uses: ./.github/actions/build_env
+
+      - name: format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+      # TODO: clippy can share cache if build for tests is done prior
+      # - name: build for cache
+      #   run: cargo build --tests --workspace
+
+      - name: clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --workspace --tests -- -D warnings

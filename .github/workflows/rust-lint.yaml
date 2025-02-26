@@ -1,0 +1,22 @@
+# testing future versions of rust
+name: rust-lint
+on:
+  push:
+    branches: ["*"]
+
+jobs:
+  lints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup env
+        uses: ./.github/actions/build_env
+
+      # We require the nightly build of cargo fmt
+      # to provide stricter rust formatting.
+      # - name: fmt
+      #   run: cargo +nightly fmt --check
+
+      - name: xclippy alias
+        run: cargo xclippy

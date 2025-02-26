@@ -2,9 +2,7 @@
 name: rust-lint
 on:
   push:
-    branches: ["ci*"] # glob pattern to allow slash /
-  schedule:
-    - cron: "30 00 * * *"
+    branches: ["*"]
 
 jobs:
   lints:

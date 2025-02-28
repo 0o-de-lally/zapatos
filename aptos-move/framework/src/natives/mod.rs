@@ -25,6 +25,11 @@ pub mod transaction_context;
 pub mod type_info;
 pub mod util;
 
+//////// 0L ////////
+pub mod ol_native_vdf;
+//////// end 0L ////////
+
+
 use crate::natives::cryptography::multi_ed25519;
 use aggregator_natives::{aggregator, aggregator_factory, aggregator_v2};
 use aptos_native_interface::{RawSafeNative, SafeNativeBuilder};

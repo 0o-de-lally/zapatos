@@ -254,6 +254,8 @@ members = [
     "tools/compute-module-expansion-size",
     "types",
     "vm-validator",
+    ######## 0L ########
+    "shoes",
 ]
 
 # NOTE: default-members is the complete list of binaries that form the "production Aptos codebase". These members should
@@ -822,7 +824,10 @@ wasm-bindgen = "0.2.95"
 wasm-bindgen-futures = "0.4.42"
 which = "4.2.5"
 whoami = "1.5.0"
-x25519-dalek = "1.2.0"
+######## 0L #########
+# x25519-dalek = "1.2.0"
+x25519-dalek = { git = "https://github.com/aptos-labs/x25519-dalek", rev = "b9cdbaf36bf2a83438d9f660e5a708c82ed60d8e" }
+######## END #########
 z3tracer = "0.8.0"
 
 # MOVE DEPENDENCIES
@@ -904,7 +909,7 @@ debug = true
 [patch.crates-io]
 serde-reflection = { git = "https://github.com/aptos-labs/serde-reflection", rev = "73b6bbf748334b71ff6d7d09d06a29e3062ca075" }
 merlin = { git = "https://github.com/aptos-labs/merlin" }
-x25519-dalek = { git = "https://github.com/aptos-labs/x25519-dalek", rev = "b9cdbaf36bf2a83438d9f660e5a708c82ed60d8e" }
+# x25519-dalek = { git = "https://github.com/aptos-labs/x25519-dalek", rev = "b9cdbaf36bf2a83438d9f660e5a708c82ed60d8e" }
 futures = { git = "https://github.com/aptos-labs/futures-rs", branch = "backport" }
 futures-channel = { git = "https://github.com/aptos-labs/futures-rs", branch = "backport" }
 futures-executor = { git = "https://github.com/aptos-labs/futures-rs", branch = "backport" }

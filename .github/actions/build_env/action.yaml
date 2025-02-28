@@ -1,0 +1,33 @@
+name: setup
+description: initialize ubuntu environment
+runs:
+  using: composite
+  steps:
+  - name: Maximize build disk space
+    uses: AdityaGarg8/remove-unwanted-software@v4.1
+    with:
+      remove-android: 'true'
+      remove-docker-images: 'true'
+      remove-haskell: 'true'
+      remove-codeql: 'true'
+      remove-dotnet: 'true'
+  - name: Checkout
+    uses: actions/checkout@v4
+
+  - name: Install Rust Toolchain
+    uses: dtolnay/rust-toolchain@master
+    with:
+      toolchain: 1.78.0
+      components: "clippy, rustfmt"
+
+  - name: Print installed Rust toolchains
+    shell: bash
+    run: rustup toolchain list
+
+
+  - name: Install required non-Rust build tools
+    uses: awalsh128/cache-apt-pkgs-action@latest
+    with:
+      # TODO: check if we need all the packages below -- this list comes from the Libra build setup script
+      packages: build-essential lld pkg-config libssl-dev clang libudev-dev libdw-dev
+      version: 1.0 # This is a cache key -- change it when you change the package list above

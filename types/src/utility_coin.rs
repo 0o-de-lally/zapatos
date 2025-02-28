@@ -22,7 +22,7 @@ static APTOS_COIN_TYPE: Lazy<TypeTag> = Lazy::new(|| {
         address: AccountAddress::ONE,
         module: ident_str!("gas_coin").to_owned(), //////// 0L //////// a number of API endpoint (e.g. simulate_gas) will check for the coin resource and are looking for a specific name, so we're changing this to the generic coin name
         name: ident_str!("GasCoin").to_owned(), //////// 0L ////////
-        type_params: vec![],
+        type_args: vec![],
     }))
 });
 

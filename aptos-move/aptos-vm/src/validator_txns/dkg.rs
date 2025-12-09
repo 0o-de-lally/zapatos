@@ -31,7 +31,7 @@ use move_vm_runtime::module_traversal::{TraversalContext, TraversalStorage};
 use move_vm_types::gas::UnmeteredGasMeter;
 
 #[derive(Debug)]
-enum ExpectedFailure {
+pub(crate) enum ExpectedFailure {
     // Move equivalent: `errors::invalid_argument(*)`
     EpochNotCurrent = 0x10001,
     TranscriptDeserializationFailed = 0x10002,
@@ -43,7 +43,7 @@ enum ExpectedFailure {
     MissingResourceConfiguration = 0x30003,
 }
 
-enum ExecutionFailure {
+pub(crate) enum ExecutionFailure {
     Expected(ExpectedFailure),
     Unexpected(VMStatus),
 }

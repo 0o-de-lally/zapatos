@@ -1,5 +1,6 @@
 spec aptos_framework::timelock {
     spec module {
+
         pragma verify = true;
         pragma aborts_if_is_strict;
     }
@@ -15,7 +16,7 @@ spec aptos_framework::timelock {
         spec_timelock_state().last_rotation_time <= aptos_framework::timestamp::spec_now_microseconds();
 
     spec initialize {
-        let addr = signer::address_of(framework);
+        let addr = std::signer::address_of(framework);
         aborts_if !system_addresses::is_aptos_framework_address(addr);
         aborts_if exists<TimelockState>(addr);
         ensures exists<TimelockState>(addr);
@@ -26,7 +27,7 @@ spec aptos_framework::timelock {
         // Code check: `if (!exists<TimelockState>(@aptos_framework)) { return };`
         // So it shouldn't abort on missing resource.
         
-        let addr = signer::address_of(vm);
+        let addr = std::signer::address_of(vm);
         aborts_if addr != @vm_reserved; // system_addresses::assert_vm(vm)
         
         // Complex logic around time and table operations

@@ -210,7 +210,7 @@ module aptos_framework::block {
         failed_proposer_indices: vector<u64>,
         previous_block_votes_bitvec: vector<u8>,
         timestamp: u64
-    ) acquires BlockResource, CommitHistory, TimelockState {
+    ) acquires BlockResource, CommitHistory {
         let epoch_interval = block_prologue_common(&vm, hash, epoch, round, proposer, failed_proposer_indices, previous_block_votes_bitvec, timestamp);
         timelock::on_new_block(&vm);
         randomness::on_new_block(&vm, epoch, round, option::none());
@@ -230,7 +230,7 @@ module aptos_framework::block {
         previous_block_votes_bitvec: vector<u8>,
         timestamp: u64,
         randomness_seed: Option<vector<u8>>,
-    ) acquires BlockResource, CommitHistory, TimelockState {
+    ) acquires BlockResource, CommitHistory {
         let epoch_interval = block_prologue_common(
             &vm,
             hash,

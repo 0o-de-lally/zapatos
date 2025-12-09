@@ -6,13 +6,11 @@ use crate::{
     errors::expect_only_successful_execution,
     move_vm_ext::{AptosMoveResolver, SessionId},
     system_module_names::{PUBLISH_PUBLIC_KEY, PUBLISH_SECRET_SHARE, TIMELOCK_MODULE},
-    validator_txns::dkg::ExecutionFailure::Unexpected,
     AptosVM,
 };
 use aptos_types::{
     dkg::{DKGTranscript, TimelockShare},
     move_utils::as_move_value::AsMoveValue,
-    transaction::TransactionStatus,
 };
 use aptos_vm_logging::log_schema::AdapterLogSchema;
 use aptos_vm_types::{
@@ -21,7 +19,7 @@ use aptos_vm_types::{
 use move_core_types::{
     account_address::AccountAddress,
     value::{serialize_values, MoveValue},
-    vm_status::{StatusCode, VMStatus},
+    vm_status::VMStatus,
 };
 use move_vm_runtime::module_traversal::{TraversalContext, TraversalStorage};
 use move_vm_types::gas::UnmeteredGasMeter;
@@ -64,11 +62,9 @@ impl AptosVM {
             session,
             module_storage,
             &self
-                .storage_gas_params(log_context)
-                .map_err(Unexpected)?
+                .storage_gas_params(log_context)?
                 .change_set_configs,
-        )
-        .map_err(Unexpected)?;
+        )?;
 
         Ok((VMStatus::Executed, output))
     }
@@ -110,11 +106,9 @@ impl AptosVM {
             session,
             module_storage,
             &self
-                .storage_gas_params(log_context)
-                .map_err(Unexpected)?
+                .storage_gas_params(log_context)?
                 .change_set_configs,
-        )
-        .map_err(Unexpected)?;
+        )?;
 
         Ok((VMStatus::Executed, output))
     }

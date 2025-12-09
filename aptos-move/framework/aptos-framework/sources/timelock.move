@@ -1,6 +1,5 @@
 module aptos_framework::timelock {
-    use std::error;
-    use std::vector;
+
     use aptos_std::table::{Self, Table};
     use aptos_framework::event::{Self, EventHandle};
     use aptos_framework::timestamp;

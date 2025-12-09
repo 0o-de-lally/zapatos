@@ -21,7 +21,7 @@ use aptos_types::{
     block_metadata::BlockMetadata,
     block_metadata_ext::BlockMetadataExt,
     contract_event::{ContractEvent, EventWithVersion},
-    dkg::{DKGTranscript, DKGTranscriptMetadata},
+    dkg::{DKGTranscript, DKGTranscriptMetadata, TimelockShare},
     function_info::FunctionInfo,
     jwks::{jwk::JWK, ProviderJWKs, QuorumCertifiedUpdate},
     keyless,
@@ -679,6 +679,8 @@ impl BlockMetadataTransaction {
 pub enum ValidatorTransaction {
     ObservedJwkUpdate(JWKUpdateTransaction),
     DkgResult(DKGResultTransaction),
+    TimelockDkgResult(DKGResultTransaction),
+    TimelockShare(TimelockShareTransaction),
 }
 
 impl ValidatorTransaction {
@@ -688,6 +690,8 @@ impl ValidatorTransaction {
                 "validator_transaction__observed_jwk_update"
             },
             ValidatorTransaction::DkgResult(_) => "validator_transaction__dkg_result",
+            ValidatorTransaction::TimelockDkgResult(_) => "validator_transaction__timelock_dkg_result",
+            ValidatorTransaction::TimelockShare(_) => "validator_transaction__timelock_share",
         }
     }
 
@@ -695,6 +699,8 @@ impl ValidatorTransaction {
         match self {
             ValidatorTransaction::ObservedJwkUpdate(t) => &t.info,
             ValidatorTransaction::DkgResult(t) => &t.info,
+            ValidatorTransaction::TimelockDkgResult(t) => &t.info,
+            ValidatorTransaction::TimelockShare(t) => &t.info,
         }
     }
 
@@ -702,6 +708,8 @@ impl ValidatorTransaction {
         match self {
             ValidatorTransaction::ObservedJwkUpdate(t) => &mut t.info,
             ValidatorTransaction::DkgResult(t) => &mut t.info,
+            ValidatorTransaction::TimelockDkgResult(t) => &mut t.info,
+            ValidatorTransaction::TimelockShare(t) => &mut t.info,
         }
     }
 
@@ -709,6 +717,8 @@ impl ValidatorTransaction {
         match self {
             ValidatorTransaction::ObservedJwkUpdate(t) => t.timestamp,
             ValidatorTransaction::DkgResult(t) => t.timestamp,
+            ValidatorTransaction::TimelockDkgResult(t) => t.timestamp,
+            ValidatorTransaction::TimelockShare(t) => t.timestamp,
         }
     }
 
@@ -716,6 +726,8 @@ impl ValidatorTransaction {
         match self {
             ValidatorTransaction::ObservedJwkUpdate(t) => &t.events,
             ValidatorTransaction::DkgResult(t) => &t.events,
+            ValidatorTransaction::TimelockDkgResult(t) => &t.events,
+            ValidatorTransaction::TimelockShare(t) => &t.events,
         }
     }
 }
@@ -753,6 +765,22 @@ impl
                 timestamp: U64::from(timestamp),
                 quorum_certified_update: quorum_certified_update.into(),
             }),
+            aptos_types::validator_txn::ValidatorTransaction::TimelockDKGResult(dkg_transcript) => {
+                Self::TimelockDkgResult(DKGResultTransaction {
+                    info,
+                    events,
+                    timestamp: U64::from(timestamp),
+                    dkg_transcript: dkg_transcript.into(),
+                })
+            },
+            aptos_types::validator_txn::ValidatorTransaction::TimelockShare(share) => {
+                Self::TimelockShare(TimelockShareTransaction {
+                    info,
+                    events,
+                    timestamp: U64::from(timestamp),
+                    share: share.into(),
+                })
+            },
         }
     }
 }
@@ -837,6 +865,31 @@ pub struct DKGResultTransaction {
     pub events: Vec<Event>,
     pub timestamp: U64,
     pub dkg_transcript: ExportedDKGTranscript,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Object)]
+pub struct TimelockShareTransaction {
+    #[serde(flatten)]
+    #[oai(flatten)]
+    pub info: TransactionInfo,
+    pub events: Vec<Event>,
+    pub timestamp: U64,
+    pub share: ExportedTimelockShare,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Object)]
+pub struct ExportedTimelockShare {
+    pub interval: U64,
+    pub share: HexEncodedBytes,
+}
+
+impl From<TimelockShare> for ExportedTimelockShare {
+    fn from(value: TimelockShare) -> Self {
+        Self {
+            interval: value.interval.into(),
+            share: HexEncodedBytes::from(value.share),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Object)]

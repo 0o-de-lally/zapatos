@@ -94,7 +94,11 @@ pub fn create_event_subscription_service(
             .subscribe_to_reconfigurations()
             .expect("DKG must subscribe to reconfigurations");
         let dkg_start_events = event_subscription_service
-            .subscribe_to_events(vec![], vec!["0x1::dkg::DKGStartEvent".to_string()])
+            .subscribe_to_events(vec![], vec![
+                "0x1::dkg::DKGStartEvent".to_string(),
+                "0x1::timelock::StartKeyGenEvent".to_string(),
+                "0x1::timelock::RequestRevealEvent".to_string(),
+            ])
             .expect("Consensus must subscribe to DKG events");
         Some((reconfig_events, dkg_start_events))
     } else {

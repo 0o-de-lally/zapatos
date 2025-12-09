@@ -67,6 +67,7 @@ pub struct DKGManager<DKG: DKGTrait> {
     // Control states.
     stopped: bool,
     state: InnerState,
+    is_timelock: bool,
 }
 
 impl InnerState {
@@ -96,6 +97,7 @@ impl<DKG: DKGTrait> DKGManager<DKG> {
         epoch_state: Arc<EpochState>,
         agg_trx_producer: Arc<dyn TAggTranscriptProducer<DKG>>,
         vtxn_pool: VTxnPoolState,
+        is_timelock: bool,
     ) -> Self {
         let (pull_notification_tx, pull_notification_rx) =
             aptos_channel::new(QueueStyle::KLAST, 1, None);
@@ -111,6 +113,7 @@ impl<DKG: DKGTrait> DKGManager<DKG> {
             agg_trx_producer,
             stopped: false,
             state: InnerState::NotStarted,
+            is_timelock,
         }
     }
 
@@ -390,14 +393,25 @@ impl<DKG: DKGTrait> DKGManager<DKG> {
                     .with_label_values(&[self.my_addr.to_hex().as_str(), "agg_transcript_ready"])
                     .observe(secs_since_dkg_start);
 
-                let txn = ValidatorTransaction::DKGResult(DKGTranscript {
-                    metadata: DKGTranscriptMetadata {
-                        epoch: self.epoch_state.epoch,
-                        author: self.my_addr,
-                    },
-                    transcript_bytes: bcs::to_bytes(&agg_trx)
-                        .map_err(|e| anyhow!("transcript serialization error: {e}"))?,
-                });
+                let txn = if self.is_timelock {
+                    ValidatorTransaction::TimelockDKGResult(DKGTranscript {
+                        metadata: DKGTranscriptMetadata {
+                            epoch: self.epoch_state.epoch,
+                            author: self.my_addr,
+                        },
+                        transcript_bytes: bcs::to_bytes(&agg_trx)
+                            .map_err(|e| anyhow!("transcript serialization error: {e}"))?,
+                    })
+                } else {
+                    ValidatorTransaction::DKGResult(DKGTranscript {
+                        metadata: DKGTranscriptMetadata {
+                            epoch: self.epoch_state.epoch,
+                            author: self.my_addr,
+                        },
+                        transcript_bytes: bcs::to_bytes(&agg_trx)
+                            .map_err(|e| anyhow!("transcript serialization error: {e}"))?,
+                    })
+                };
                 let vtxn_guard = self.vtxn_pool.put(
                     Topic::DKG,
                     Arc::new(txn),

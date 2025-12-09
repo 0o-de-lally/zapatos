@@ -233,3 +233,52 @@ pub mod dummy_dkg;
 pub mod real_dkg;
 
 pub type DefaultDKG = RealDKG;
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub struct TimelockShare {
+    pub interval: u64,
+    pub share: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Eq, PartialEq)]
+pub struct TimelockConfig {
+    pub threshold: u64,
+    pub total_validators: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct StartKeyGenEvent {
+    pub interval: u64,
+    pub config: TimelockConfig,
+}
+
+impl MoveStructType for StartKeyGenEvent {
+    const MODULE_NAME: &'static IdentStr = ident_str!("timelock");
+    const STRUCT_NAME: &'static IdentStr = ident_str!("StartKeyGenEvent");
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct RequestRevealEvent {
+    pub interval: u64,
+}
+
+impl MoveStructType for RequestRevealEvent {
+    const MODULE_NAME: &'static IdentStr = ident_str!("timelock");
+    const STRUCT_NAME: &'static IdentStr = ident_str!("RequestRevealEvent");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_timelock_share_bcs() {
+        let share = TimelockShare {
+            interval: 100,
+            share: vec![1, 2, 3, 4],
+        };
+        let bytes = bcs::to_bytes(&share).expect("serialization failed");
+        let decoded: TimelockShare = bcs::from_bytes(&bytes).expect("deserialization failed");
+        assert_eq!(share, decoded);
+    }
+}

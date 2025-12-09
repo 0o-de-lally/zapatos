@@ -63,6 +63,8 @@ mod transaction_filter;
 #[cfg(test)]
 mod txn_broadcast;
 #[cfg(test)]
+mod timelock;
+#[cfg(test)]
 mod txn_emitter;
 #[cfg(test)]
 mod upgrade;

@@ -32,9 +32,24 @@ impl AptosVM {
                 session_id,
                 jwk_update,
             ),
+            ValidatorTransaction::TimelockDKGResult(dkg_node) => self.process_timelock_dkg_result(
+                resolver,
+                module_storage,
+                log_context,
+                session_id,
+                dkg_node,
+            ),
+            ValidatorTransaction::TimelockShare(share) => self.process_timelock_share(
+                resolver,
+                module_storage,
+                log_context,
+                session_id,
+                share,
+            ),
         }
     }
 }
 
 mod dkg;
 mod jwk;
+mod timelock;

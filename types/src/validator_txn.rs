@@ -3,7 +3,7 @@
 
 #[cfg(any(test, feature = "fuzzing"))]
 use crate::dkg::DKGTranscriptMetadata;
-use crate::{dkg::DKGTranscript, jwks, validator_verifier::ValidatorVerifier};
+use crate::{dkg::{DKGTranscript, TimelockShare}, jwks, validator_verifier::ValidatorVerifier};
 use anyhow::Context;
 use aptos_crypto_derive::{BCSCryptoHash, CryptoHasher};
 #[cfg(any(test, feature = "fuzzing"))]
@@ -15,6 +15,8 @@ use std::fmt::Debug;
 pub enum ValidatorTransaction {
     DKGResult(DKGTranscript),
     ObservedJWKUpdate(jwks::QuorumCertifiedUpdate),
+    TimelockDKGResult(DKGTranscript),
+    TimelockShare(TimelockShare),
 }
 
 impl ValidatorTransaction {
@@ -39,6 +41,8 @@ impl ValidatorTransaction {
             ValidatorTransaction::ObservedJWKUpdate(_) => {
                 "validator_transaction__observed_jwk_update"
             },
+            ValidatorTransaction::TimelockDKGResult(_) => "validator_transaction__timelock_dkg_result",
+            ValidatorTransaction::TimelockShare(_) => "validator_transaction__timelock_share",
         }
     }
 
@@ -48,6 +52,10 @@ impl ValidatorTransaction {
                 .verify(verifier)
                 .context("DKGResult verification failed"),
             ValidatorTransaction::ObservedJWKUpdate(_) => Ok(()),
+            ValidatorTransaction::TimelockDKGResult(dkg_result) => dkg_result
+                .verify(verifier)
+                .context("TimelockDKGResult verification failed"),
+            ValidatorTransaction::TimelockShare(_) => Ok(()),
         }
     }
 }
@@ -61,4 +69,5 @@ pub enum Topic {
         issuer: jwks::Issuer,
         kid: jwks::KID,
     },
+    TIMELOCK,
 }

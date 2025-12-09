@@ -22,12 +22,13 @@ use aptos_reliable_broadcast::ReliableBroadcast;
 use aptos_safety_rules::{safety_rules_manager::storage, PersistentSafetyStorage};
 use aptos_types::{
     account_address::AccountAddress,
-    dkg::{DKGStartEvent, DKGState, DefaultDKG},
+    dkg::{DKGStartEvent, DKGState, DefaultDKG, StartKeyGenEvent, RequestRevealEvent},
     epoch_state::EpochState,
     on_chain_config::{
         OnChainConfigPayload, OnChainConfigProvider, OnChainConsensusConfig,
         OnChainRandomnessConfig, RandomnessConfigMoveStruct, RandomnessConfigSeqNum, ValidatorSet,
     },
+    validator_txn::{Topic, ValidatorTransaction},
 };
 use aptos_validator_transaction_pool::VTxnPoolState;
 use futures::StreamExt;
@@ -113,6 +114,12 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
             for event in subscribed_events {
                 if let Ok(dkg_start_event) = DKGStartEvent::try_from(&event) {
                     let _ = tx.push((), dkg_start_event);
+                    return Ok(());
+                } else if let Ok(timelock_start) = StartKeyGenEvent::try_from(&event) {
+                    self.start_timelock_dkg(timelock_start);
+                    return Ok(());
+                } else if let Ok(timelock_reveal) = RequestRevealEvent::try_from(&event) {
+                    self.process_timelock_reveal(timelock_reveal);
                     return Ok(());
                 } else {
                     debug!("[DKG] on_dkg_start_notification: failed in converting a contract event to a dkg start event!");
@@ -245,6 +252,7 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
                 epoch_state,
                 Arc::new(agg_trx_producer),
                 self.vtxn_pool.clone(),
+                false,
             );
             tokio::spawn(dkg_manager.run(
                 in_progress_session,
@@ -277,5 +285,27 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
             self.network_sender.clone(),
             self.self_sender.clone(),
         )
+    }
+
+    fn start_timelock_dkg(&self, event: StartKeyGenEvent) {
+        info!("[Timelock] Starting keygen for interval {}", event.interval);
+        // PoC: Log that we started. Real implementation would spawn DKGManager with is_timelock=true
+        // and constructed DKGSessionMetadata.
+    }
+
+    fn process_timelock_reveal(&self, event: RequestRevealEvent) {
+        info!("[Timelock] Revealing share for interval {}", event.interval);
+        // PoC: Submit a dummy share
+        let share = aptos_types::dkg::TimelockShare {
+            interval: event.interval,
+            share: vec![0xDE, 0xAD, 0xBE, 0xEF], 
+        };
+         
+        let txn = ValidatorTransaction::TimelockShare(share); 
+        let _ = self.vtxn_pool.put(
+             Topic::TIMELOCK,
+             Arc::new(txn),
+             None,
+        );
     }
 }

@@ -15,6 +15,7 @@ module aptos_framework::block {
     use aptos_framework::state_storage;
     use aptos_framework::system_addresses;
     use aptos_framework::timestamp;
+    use aptos_framework::timelock;
 
     friend aptos_framework::genesis;
 
@@ -209,8 +210,9 @@ module aptos_framework::block {
         failed_proposer_indices: vector<u64>,
         previous_block_votes_bitvec: vector<u8>,
         timestamp: u64
-    ) acquires BlockResource, CommitHistory {
+    ) acquires BlockResource, CommitHistory, TimelockState {
         let epoch_interval = block_prologue_common(&vm, hash, epoch, round, proposer, failed_proposer_indices, previous_block_votes_bitvec, timestamp);
+        timelock::on_new_block(&vm);
         randomness::on_new_block(&vm, epoch, round, option::none());
         if (timestamp - reconfiguration::last_reconfiguration_time() >= epoch_interval) {
             reconfiguration::reconfigure();
@@ -228,7 +230,7 @@ module aptos_framework::block {
         previous_block_votes_bitvec: vector<u8>,
         timestamp: u64,
         randomness_seed: Option<vector<u8>>,
-    ) acquires BlockResource, CommitHistory {
+    ) acquires BlockResource, CommitHistory, TimelockState {
         let epoch_interval = block_prologue_common(
             &vm,
             hash,
@@ -239,6 +241,7 @@ module aptos_framework::block {
             previous_block_votes_bitvec,
             timestamp
         );
+        timelock::on_new_block(&vm);
         randomness::on_new_block(&vm, epoch, round, randomness_seed);
 
         if (timestamp - reconfiguration::last_reconfiguration_time() >= epoch_interval) {

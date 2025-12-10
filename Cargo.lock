@@ -7501,6 +7501,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "cross-chain-tester"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "aptos-cached-packages",
+ "aptos-config",
+ "aptos-crypto",
+ "aptos-forge",
+ "aptos-framework",
+ "aptos-infallible",
+ "aptos-logger",
+ "aptos-sdk",
+ "aptos-types",
+ "ethers",
+ "hex",
+ "once_cell",
+ "portpicker",
+ "rand 0.7.3",
+ "reqwest 0.11.23",
+ "serde_json",
+ "tempfile",
+ "tokio",
+]
+
+[[package]]
 name = "crossbeam"
 version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -14723,6 +14748,15 @@ name = "portable-atomic"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7170ef9988bc169ba16dd36a7fa041e5c4cbeb6a35b76d4c03daded371eae7c0"
+
+[[package]]
+name = "portpicker"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "be97d76faf1bfab666e1375477b23fde79eccf0276e9b63b92a39d676a889ba9"
+dependencies = [
+ "rand 0.8.5",
+]
 
 [[package]]
 name = "postgres-native-tls"

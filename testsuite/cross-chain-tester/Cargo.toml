@@ -1,0 +1,28 @@
+[package]
+name = "cross-chain-tester"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+anyhow = { workspace = true }
+aptos-forge = { workspace = true }
+aptos-sdk = { workspace = true }
+aptos-types = { workspace = true }
+aptos-crypto = { workspace = true }
+aptos-logger = { workspace = true }
+ethers = { workspace = true }
+tokio = { workspace = true }
+tempfile = { workspace = true }
+portpicker = "0.1.1"
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true }
+aptos-cached-packages = { workspace = true }
+aptos-framework = { workspace = true }
+aptos-config = { workspace = true }
+aptos-infallible = { workspace = true }
+once_cell = { workspace = true }
+
+[dev-dependencies]

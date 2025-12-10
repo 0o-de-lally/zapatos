@@ -194,6 +194,7 @@ members = [
     "storage/scratchpad",
     "storage/storage-interface",
     "testsuite/benchmark-workloads/package-generator",
+    "testsuite/cross-chain-tester",
     "testsuite/forge",
     "testsuite/forge-cli",
     "testsuite/fuzzer",

@@ -66,6 +66,8 @@ mod txn_broadcast;
 mod txn_emitter;
 #[cfg(test)]
 mod upgrade;
+#[cfg(test)]
+mod secp_transactions;
 
 #[cfg(test)]
 mod smoke_test_environment;

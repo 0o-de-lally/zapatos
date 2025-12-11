@@ -45,6 +45,7 @@ See <code>*_algebra.<b>move</b></code> for currently implemented algebraic struc
 -  [Struct `Element`](#0x1_crypto_algebra_Element)
 -  [Constants](#@Constants_0)
 -  [Function `eq`](#0x1_crypto_algebra_eq)
+-  [Function `handle`](#0x1_crypto_algebra_handle)
 -  [Function `from_u64`](#0x1_crypto_algebra_from_u64)
 -  [Function `zero`](#0x1_crypto_algebra_zero)
 -  [Function `one`](#0x1_crypto_algebra_one)
@@ -202,6 +203,31 @@ Check if <code>x == y</code> for elements <code>x</code> and <code>y</code> of a
 <pre><code><b>public</b> <b>fun</b> <a href="crypto_algebra.md#0x1_crypto_algebra_eq">eq</a>&lt;S&gt;(x: &<a href="crypto_algebra.md#0x1_crypto_algebra_Element">Element</a>&lt;S&gt;, y: &<a href="crypto_algebra.md#0x1_crypto_algebra_Element">Element</a>&lt;S&gt;): bool {
     <a href="crypto_algebra.md#0x1_crypto_algebra_abort_unless_cryptography_algebra_natives_enabled">abort_unless_cryptography_algebra_natives_enabled</a>();
     <a href="crypto_algebra.md#0x1_crypto_algebra_eq_internal">eq_internal</a>&lt;S&gt;(x.handle, y.handle)
+}
+</code></pre>
+
+
+
+</details>
+
+<a id="0x1_crypto_algebra_handle"></a>
+
+## Function `handle`
+
+Return the internal handle of an element.
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="crypto_algebra.md#0x1_crypto_algebra_handle">handle</a>&lt;S&gt;(element: &<a href="crypto_algebra.md#0x1_crypto_algebra_Element">crypto_algebra::Element</a>&lt;S&gt;): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="crypto_algebra.md#0x1_crypto_algebra_handle">handle</a>&lt;S&gt;(element: &<a href="crypto_algebra.md#0x1_crypto_algebra_Element">Element</a>&lt;S&gt;): u64 {
+    element.handle
 }
 </code></pre>
 

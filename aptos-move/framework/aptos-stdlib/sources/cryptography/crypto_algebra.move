@@ -58,6 +58,11 @@ module aptos_std::crypto_algebra {
         eq_internal<S>(x.handle, y.handle)
     }
 
+    /// Return the internal handle of an element.
+    public fun handle<S>(element: &Element<S>): u64 {
+        element.handle
+    }
+
     /// Convert a u64 to an element of a structure `S`.
     public fun from_u64<S>(value: u64): Element<S> {
         abort_unless_cryptography_algebra_natives_enabled();

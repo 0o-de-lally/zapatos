@@ -8,8 +8,13 @@ module aptos_std::ibe {
     /// 
     /// generic types G1, G2, Gt must match the curves used (e.g. BLS12-381).
     public fun decrypt<G1, G2, Gt>(u: &Element<G1>, sig: &Element<G2>, ciphertext: vector<u8>): vector<u8> {
-        abort_unless_cryptography_algebra_natives_enabled();
-        decrypt_internal<G1, G2, Gt>(u.handle(), sig.handle(), ciphertext)
+        // Use native IBE decryption which is gas-optimized
+        // Calls crypto_algebra::handle explicitly to avoid dot-call resolution issues
+        decrypt_internal<G1, G2, Gt>(
+            crypto_algebra::handle(u), 
+            crypto_algebra::handle(sig), 
+            ciphertext
+        )
     }
 
     // Native function definition

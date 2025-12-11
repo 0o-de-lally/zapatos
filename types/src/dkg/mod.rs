@@ -9,7 +9,8 @@ use crate::{
         ValidatorConsensusInfo, ValidatorConsensusInfoMoveStruct, ValidatorVerifier,
     },
 };
-use anyhow::{Context, Result};
+use crate::contract_event::ContractEvent;
+use anyhow::{bail, Context, Result};
 use aptos_crypto::Uniform;
 use aptos_crypto_derive::{BCSCryptoHash, CryptoHasher};
 use move_core_types::{
@@ -257,6 +258,17 @@ impl MoveStructType for StartKeyGenEvent {
     const STRUCT_NAME: &'static IdentStr = ident_str!("StartKeyGenEvent");
 }
 
+impl TryFrom<&ContractEvent> for StartKeyGenEvent {
+    type Error = anyhow::Error;
+
+    fn try_from(event: &ContractEvent) -> Result<Self> {
+        if event.type_tag() != &TypeTag::Struct(Box::new(Self::struct_tag())) {
+            bail!("Expected StartKeyGenEvent tag");
+        }
+        bcs::from_bytes(event.event_data()).context("Failed to deserialize StartKeyGenEvent")
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RequestRevealEvent {
     pub interval: u64,
@@ -265,6 +277,17 @@ pub struct RequestRevealEvent {
 impl MoveStructType for RequestRevealEvent {
     const MODULE_NAME: &'static IdentStr = ident_str!("timelock");
     const STRUCT_NAME: &'static IdentStr = ident_str!("RequestRevealEvent");
+}
+
+impl TryFrom<&ContractEvent> for RequestRevealEvent {
+    type Error = anyhow::Error;
+
+    fn try_from(event: &ContractEvent) -> Result<Self> {
+        if event.type_tag() != &TypeTag::Struct(Box::new(Self::struct_tag())) {
+            bail!("Expected RequestRevealEvent tag");
+        }
+        bcs::from_bytes(event.event_data()).context("Failed to deserialize RequestRevealEvent")
+    }
 }
 
 #[cfg(test)]

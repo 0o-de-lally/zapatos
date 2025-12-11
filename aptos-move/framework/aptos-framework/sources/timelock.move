@@ -177,4 +177,16 @@ module aptos_framework::timelock {
         let not_framework = create_signer_for_test(@0x1);
         initialize(&not_framework);
     }
+    #[view]
+    public fun get_secret(interval: u64): std::option::Option<vector<u8>> acquires TimelockState {
+        if (!exists<TimelockState>(@aptos_framework)) {
+            return std::option::none()
+        };
+        let state = borrow_global<TimelockState>(@aptos_framework);
+        if (table::contains(&state.revealed_secrets, interval)) {
+            std::option::some(*table::borrow(&state.revealed_secrets, interval))
+        } else {
+            std::option::none()
+        }
+    }
 }

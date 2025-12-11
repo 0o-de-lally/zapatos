@@ -1014,6 +1014,8 @@ fn convert_validator_transaction(
                     )
                 )
             },
+            ApiValidatorTransactionEnum::TimelockDkgResult(_) => None,
+            ApiValidatorTransactionEnum::TimelockShare(_) => None,
         },
         events: convert_events(api_validator_txn.events()),
     })

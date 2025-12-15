@@ -9,6 +9,9 @@ module aptos_framework::timelock {
     friend aptos_framework::block;
     friend aptos_framework::genesis;
 
+    #[test_only]
+    use std::vector;
+
     /// The singleton was not initialized.
     const ETIMELOCK_NOT_INITIALIZED: u64 = 1;
 
@@ -99,7 +102,7 @@ module aptos_framework::timelock {
 
     /// validators call this to publish the public key for a future interval
     public entry fun publish_public_key(
-        validator: &signer,
+        _validator: &signer,
         interval: u64,
         pk: vector<u8>
     ) acquires TimelockState {
@@ -120,7 +123,7 @@ module aptos_framework::timelock {
 
     /// validators call this to publish the secret share/signature for a past interval
     public entry fun publish_secret_share(
-        validator: &signer,
+        _validator: &signer,
         interval: u64,
         share: vector<u8>
     ) acquires TimelockState {
@@ -173,7 +176,7 @@ module aptos_framework::timelock {
 
     #[test(framework = @aptos_framework)]
     #[expected_failure(abort_code = 524294, location = aptos_framework::system_addresses)] // E_VM_NOT_APTOS_FRAMEWORK
-    public fun test_unauthorized_initialize(framework: &signer) {
+    public fun test_unauthorized_initialize(_framework: &signer) {
         let not_framework = create_signer_for_test(@0x1);
         initialize(&not_framework);
     }

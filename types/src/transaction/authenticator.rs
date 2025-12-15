@@ -778,14 +778,33 @@ impl AccountAuthenticator {
             Self::NoAccountAuthenticator => bail!("No signature to verify."),
             // Abstraction delayed the authentication after prologue.
             Self::Abstract { authenticator } => {
+                // ALWAYS print when we see Abstract authentication
+                println!("========================================");
+                println!("DEBUG: Abstract Authenticator VERIFY called");
+                println!("  Function Info: {:?}", authenticator.function_info());
+                println!("  Provided Digest: {}", hex::encode(authenticator.signing_message_digest()));
+
                 let original_signing_message = signing_message(message)?;
+                println!("  Original Signing Message length: {}", original_signing_message.len());
+                println!("  Original Signing Message (first 64 bytes): {}", hex::encode(&original_signing_message[..64.min(original_signing_message.len())]));
+
+                let computed_digest = AASigningData::signing_message_digest(
+                    original_signing_message.clone(),
+                    authenticator.function_info().clone()
+                )?;
+                println!("  Computed Digest: {}", hex::encode(&computed_digest));
+
+                if authenticator.signing_message_digest() != &computed_digest {
+                    println!("❌ DIGEST MISMATCH!");
+                    println!("  Full Original Signing Message: {}", hex::encode(&original_signing_message));
+                } else {
+                    println!("✅ Digest Match!");
+                }
+                println!("========================================");
+
                 ensure!(
-                    authenticator.signing_message_digest()
-                        == &AASigningData::signing_message_digest(
-                            original_signing_message,
-                            authenticator.function_info().clone()
-                        )?,
-                    "The signing message digest provided in Abstract Authenticator is not expected"
+                    authenticator.signing_message_digest() == &computed_digest,
+                    format!("The signing message digest provided in Abstract Authenticator is not expected. Provided: {}, Computed: {}", hex::encode(authenticator.signing_message_digest()), hex::encode(&computed_digest))
                 );
                 Ok(())
             },

@@ -5,7 +5,10 @@ module aptos_framework::genesis {
 
     use aptos_std::simple_map;
 
+    use std::features;
+
     use aptos_framework::account;
+    use aptos_framework::account_abstraction;
     use aptos_framework::aggregator_factory;
     use aptos_framework::aptos_account;
     use aptos_framework::aptos_coin::{Self, AptosCoin};
@@ -134,6 +137,19 @@ module aptos_framework::genesis {
         timelock::initialize(&aptos_framework_account);
         state_storage::initialize(&aptos_framework_account);
         nonce_validation::initialize(&aptos_framework_account);
+
+        // Enable derivable account abstraction feature (flag 88)
+        features::change_feature_flags_for_next_epoch(&aptos_framework_account, vector[88], vector[]);
+
+        // Initialize account abstraction
+        account_abstraction::initialize(&aptos_framework_account);
+        // Register ethereum_derivable_account authentication function
+        account_abstraction::register_derivable_authentication_function(
+            &aptos_framework_account,
+            @aptos_framework,
+            std::string::utf8(b"ethereum_derivable_account"),
+            std::string::utf8(b"authenticate"),
+        );
     }
 
     /// Genesis step 2: Initialize Aptos coin.
@@ -440,7 +456,7 @@ module aptos_framework::genesis {
             rewards_rate_denominator,
             voting_power_increase_limit
         );
-        features::change_feature_flags_for_verification(aptos_framework, vector[1, 2], vector[]);
+        features::change_feature_flags_for_verification(aptos_framework, vector[1, 2, 88], vector[]);
         initialize_aptos_coin(aptos_framework);
         aptos_governance::initialize_for_verification(
             aptos_framework,

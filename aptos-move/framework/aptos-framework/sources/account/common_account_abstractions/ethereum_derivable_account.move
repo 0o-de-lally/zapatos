@@ -29,6 +29,7 @@ module aptos_framework::ethereum_derivable_account {
     use aptos_framework::base16::base16_utf8_to_vec_u8;
     use aptos_std::secp256k1;
     use aptos_std::aptos_hash;
+    use aptos_std::debug;
     use std::bcs_stream::{Self, deserialize_u8};
     use std::chain_id;
     use std::string_utils;
@@ -180,15 +181,47 @@ module aptos_framework::ethereum_derivable_account {
         aa_auth_data: AbstractionAuthData,
         entry_function_name: &vector<u8>
     ) {
+        debug::print(&b"=== ETHEREUM DERIVABLE ACCOUNT DEBUG ===");
+
         let derivable_abstract_public_key = aa_auth_data.derivable_abstract_public_key();
         let abstract_public_key = deserialize_abstract_public_key(derivable_abstract_public_key);
+
+        debug::print(&b"Entry function name:");
+        debug::print(entry_function_name);
+
+        debug::print(&b"Ethereum address:");
+        debug::print(&abstract_public_key.ethereum_address);
+
+        debug::print(&b"Domain:");
+        debug::print(&abstract_public_key.domain);
+
         let digest_utf8 = string_utils::to_string(aa_auth_data.digest()).bytes();
+        debug::print(&b"Digest (hex string):");
+        debug::print(digest_utf8);
+
         let abstract_signature = deserialize_abstract_signature(aa_auth_data.derivable_abstract_signature());
         let issued_at = abstract_signature.issued_at.bytes();
+        debug::print(&b"Issued at:");
+        debug::print(issued_at);
+
         let scheme = abstract_signature.scheme.bytes();
+        debug::print(&b"Scheme:");
+        debug::print(scheme);
+
         let message = construct_message(&abstract_public_key.ethereum_address, &abstract_public_key.domain, entry_function_name, digest_utf8, issued_at, scheme);
+
+        debug::print(&b"Constructed SIWE message:");
+        debug::print(&message);
+        debug::print(&b"Message length:");
+        debug::print(&message.length());
+
         let hashed_message = aptos_hash::keccak256(message);
+        debug::print(&b"Hashed message (keccak256):");
+        debug::print(&hashed_message);
+
         let public_key_bytes = recover_public_key(&abstract_signature.signature, &hashed_message);
+        debug::print(&b"Recovered public key:");
+        debug::print(&public_key_bytes);
 
         // 1. Skip the 0x04 prefix (take the bytes after the first byte)
         let public_key_without_prefix = public_key_bytes.slice(1, public_key_bytes.length());
@@ -196,12 +229,24 @@ module aptos_framework::ethereum_derivable_account {
         let kexHash = aptos_hash::keccak256(public_key_without_prefix);
         // 3. Slice the last 20 bytes (this is the Ethereum address)
         let recovered_addr = kexHash.slice(12, 32);
+
+        debug::print(&b"Recovered Ethereum address (bytes):");
+        debug::print(&recovered_addr);
+
         // 4. Remove the 0x prefix from the utf8 account address
         let ethereum_address_without_prefix = abstract_public_key.ethereum_address.slice(2, abstract_public_key.ethereum_address.length());
 
         let account_address_vec = base16_utf8_to_vec_u8(ethereum_address_without_prefix);
+        debug::print(&b"Expected Ethereum address (bytes):");
+        debug::print(&account_address_vec);
+
+        debug::print(&b"Addresses match:");
+        debug::print(&(recovered_addr == account_address_vec));
+
         // Verify that the recovered address matches the domain account identity
         assert!(recovered_addr == account_address_vec, EADDR_MISMATCH);
+
+        debug::print(&b"=== SIGNATURE VERIFICATION PASSED ===");
     }
 
     /// Authorization function for domain account abstraction.

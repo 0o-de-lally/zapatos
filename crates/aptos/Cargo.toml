@@ -117,6 +117,7 @@ jemallocator = { workspace = true }
 
 [features]
 default = []
+testing = ["aptos-framework/testing", "move-vm-runtime/testing"]
 fuzzing = []
 no-upload-proposal = []
 indexer = ["aptos-node/indexer"]

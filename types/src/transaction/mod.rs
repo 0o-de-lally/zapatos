@@ -1242,7 +1242,27 @@ impl SignedTransaction {
     /// Checks that the signature of given transaction. Returns `Ok(SignatureCheckedTransaction)` if
     /// the signature is valid.
     pub fn check_signature(self) -> Result<SignatureCheckedTransaction> {
-        self.authenticator.verify(&self.raw_txn)?;
+        println!("======== check_signature CALLED ========");
+        println!("  Sender: {:?}", self.sender());
+        println!("  Authenticator type: {}", match &self.authenticator {
+            TransactionAuthenticator::Ed25519 { .. } => "Ed25519",
+            TransactionAuthenticator::MultiEd25519 { .. } => "MultiEd25519",
+            TransactionAuthenticator::MultiAgent { .. } => "MultiAgent",
+            TransactionAuthenticator::FeePayer { .. } => "FeePayer",
+            TransactionAuthenticator::SingleSender { .. } => "SingleSender",
+        });
+        println!("  About to call authenticator.verify()...");
+
+        let result = self.authenticator.verify(&self.raw_txn);
+
+        if let Err(ref e) = result {
+            println!("❌ authenticator.verify() FAILED: {:?}", e);
+        } else {
+            println!("✅ authenticator.verify() SUCCESS");
+        }
+        println!("======================================");
+
+        result?;
         Ok(SignatureCheckedTransaction(self))
     }
 

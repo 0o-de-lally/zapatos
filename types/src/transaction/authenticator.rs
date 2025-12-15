@@ -159,13 +159,25 @@ impl TransactionAuthenticator {
 
     /// Return Ok if all AccountAuthenticator's public keys match their signatures, Err otherwise
     pub fn verify(&self, raw_txn: &RawTransaction) -> Result<()> {
+        println!("######## TransactionAuthenticator::verify CALLED ########");
+        println!("  Transaction type: {}", match self {
+            Self::Ed25519 { .. } => "Ed25519",
+            Self::FeePayer { .. } => "FeePayer",
+            Self::MultiAgent { .. } => "MultiAgent",
+            Self::MultiEd25519 { .. } => "MultiEd25519",
+            Self::SingleSender { .. } => "SingleSender",
+        });
+
         let num_sigs: usize = self.sender().number_of_signatures()
             + self
                 .secondary_signers()
                 .iter()
                 .map(|auth| auth.number_of_signatures())
                 .sum::<usize>();
+        println!("  Total signatures: {}", num_sigs);
+
         if num_sigs > MAX_NUM_OF_SIGS {
+            println!("❌ MAX_NUM_OF_SIGS exceeded: {} > {}", num_sigs, MAX_NUM_OF_SIGS);
             return Err(Error::new(AuthenticationError::MaxSignaturesExceeded));
         }
         match self {
@@ -238,7 +250,10 @@ impl TransactionAuthenticator {
                 }
                 Ok(())
             },
-            Self::SingleSender { sender } => sender.verify(raw_txn),
+            Self::SingleSender { sender } => {
+                println!("  SingleSender detected - calling AccountAuthenticator::verify()");
+                sender.verify(raw_txn)
+            },
         }
     }
 

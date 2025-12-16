@@ -1,8 +1,6 @@
 /// Test to deserialize validator network addresses from mainnet
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_deserialize_validator_network_address() {
         // This is the hex-encoded network_addresses from validator index 0
@@ -11,30 +9,27 @@ mod tests {
         
         let bytes = hex::decode(hex_str).unwrap();
         
-        // The bytes are BCS-encoded Vec<NetworkAddress>
-        // Let's try to deserialize
-        let result: Result<Vec<aptos_types::network_address::NetworkAddress>, _> = bcs::from_bytes(&bytes);
+        // Try to deserialize as Vec<NetworkAddress>
+        let result: Result<Vec<crate::types::network_address::NetworkAddress>, _> = bcs::from_bytes(&bytes);
         
         match result {
             Ok(addrs) => {
                 println!("Successfully deserialized {} network address(es)", addrs.len());
                 for addr in &addrs {
-                    println!("Address: {}", addr);
+                    println!("Address: {:?}", addr);
                     if let Some(pubkey) = addr.find_noise_proto() {
-                        println!("  Peer ID (x25519): {:?}", pubkey);
+                        println!("  Peer ID (x25519): {}", hex::encode(pubkey));
                     }
                     if let Some(port) = addr.find_port() {
                         println!("  Port: {}", port);
                     }
+                    if let Some(dns) = addr.find_dns_name() {
+                        println!("  DNS: {}", dns);
+                    }
                 }
             }
             Err(e) => {
-                println!("Failed to deserialize: {}", e);
-                // Try as single NetworkAddress instead of Vec
-                let single_result: Result<aptos_types::network_address::NetworkAddress, _> = bcs::from_bytes(&bytes);
-                if let Ok(addr) = single_result {
-                    println!("Deserialized as single address: {}", addr);
-                }
+                println!("Failed to deserialize as Vec: {}", e);
             }
         }
     }

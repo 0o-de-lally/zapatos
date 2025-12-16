@@ -19961,7 +19961,6 @@ version = "0.1.0"
 dependencies = [
  "aes-gcm",
  "anyhow",
- "aptos-types",
  "bcs 0.1.4",
  "bytes",
  "clap 4.5.21",

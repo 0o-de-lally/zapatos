@@ -655,7 +655,6 @@ module std::features {
     /// Lifetime: transient
     const DERIVABLE_ACCOUNT_ABSTRACTION: u64 = 88;
 
-    public fun get_derivable_account_abstraction_feature(): u64 { DERIVABLE_ACCOUNT_ABSTRACTION }
 
     public fun is_derivable_account_abstraction_enabled(): bool acquires Features {
         is_enabled(DERIVABLE_ACCOUNT_ABSTRACTION)
@@ -770,7 +769,7 @@ module std::features {
     }
 
     /// Update feature flags directly. Only used in genesis/tests.
-    public fun change_feature_flags_internal(framework: &signer, enable: vector<u64>, disable: vector<u64>) acquires Features {
+    fun change_feature_flags_internal(framework: &signer, enable: vector<u64>, disable: vector<u64>) acquires Features {
         assert!(signer::address_of(framework) == @std, error::permission_denied(EFRAMEWORK_SIGNER_NEEDED));
         if (!exists<Features>(@std)) {
             move_to<Features>(framework, Features { features: vector[] })

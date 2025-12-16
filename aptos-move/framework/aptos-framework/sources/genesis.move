@@ -139,17 +139,9 @@ module aptos_framework::genesis {
         nonce_validation::initialize(&aptos_framework_account);
 
         // Enable derivable account abstraction feature (flag 88)
-        features::change_feature_flags_internal(&aptos_framework_account, vector[features::get_derivable_account_abstraction_feature()], vector[]);
+        features::change_feature_flags_for_next_epoch(&aptos_framework_account, vector[88], vector[]);
 
-        // Initialize account abstraction
-        account_abstraction::initialize(&aptos_framework_account);
-        // Register ethereum_derivable_account authentication function
-        account_abstraction::register_derivable_authentication_function(
-            &aptos_framework_account,
-            @aptos_framework,
-            std::string::utf8(b"ethereum_derivable_account"),
-            std::string::utf8(b"authenticate"),
-        );
+
     }
 
     /// Genesis step 2: Initialize Aptos coin.

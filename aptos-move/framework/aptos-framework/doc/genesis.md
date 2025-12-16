@@ -34,7 +34,6 @@
 
 
 <pre><code><b>use</b> <a href="account.md#0x1_account">0x1::account</a>;
-<b>use</b> <a href="account_abstraction.md#0x1_account_abstraction">0x1::account_abstraction</a>;
 <b>use</b> <a href="aggregator_factory.md#0x1_aggregator_factory">0x1::aggregator_factory</a>;
 <b>use</b> <a href="aptos_account.md#0x1_aptos_account">0x1::aptos_account</a>;
 <b>use</b> <a href="aptos_coin.md#0x1_aptos_coin">0x1::aptos_coin</a>;
@@ -58,7 +57,6 @@
 <b>use</b> <a href="staking_contract.md#0x1_staking_contract">0x1::staking_contract</a>;
 <b>use</b> <a href="state_storage.md#0x1_state_storage">0x1::state_storage</a>;
 <b>use</b> <a href="storage_gas.md#0x1_storage_gas">0x1::storage_gas</a>;
-<b>use</b> <a href="../../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string">0x1::string</a>;
 <b>use</b> <a href="timelock.md#0x1_timelock">0x1::timelock</a>;
 <b>use</b> <a href="timestamp.md#0x1_timestamp">0x1::timestamp</a>;
 <b>use</b> <a href="transaction_fee.md#0x1_transaction_fee">0x1::transaction_fee</a>;
@@ -371,17 +369,9 @@ Genesis step 1: Initialize aptos framework account and core modules on chain.
     <a href="nonce_validation.md#0x1_nonce_validation_initialize">nonce_validation::initialize</a>(&aptos_framework_account);
 
     // Enable derivable <a href="account.md#0x1_account">account</a> abstraction feature (flag 88)
-    <a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_change_feature_flags_internal">features::change_feature_flags_internal</a>(&aptos_framework_account, <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[<a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_get_derivable_account_abstraction_feature">features::get_derivable_account_abstraction_feature</a>()], <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[]);
+    <a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_change_feature_flags_for_next_epoch">features::change_feature_flags_for_next_epoch</a>(&aptos_framework_account, <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[88], <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[]);
 
-    // Initialize <a href="account.md#0x1_account">account</a> abstraction
-    <a href="account_abstraction.md#0x1_account_abstraction_initialize">account_abstraction::initialize</a>(&aptos_framework_account);
-    // Register <a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account">ethereum_derivable_account</a> authentication function
-    <a href="account_abstraction.md#0x1_account_abstraction_register_derivable_authentication_function">account_abstraction::register_derivable_authentication_function</a>(
-        &aptos_framework_account,
-        @aptos_framework,
-        std::string::utf8(b"<a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account">ethereum_derivable_account</a>"),
-        std::string::utf8(b"authenticate"),
-    );
+
 }
 </code></pre>
 

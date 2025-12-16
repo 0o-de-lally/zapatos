@@ -81,7 +81,7 @@ impl NodeArgs {
         }
 
         // Initialize network (no storage in streaming mode)
-        let network = std::sync::Arc::new(crate::network::Network::new());
+        let network = std::sync::Arc::new(crate::network::Network::new(Some(std::path::PathBuf::from(".")))?);
         
         println!("[STREAM] Node initialized in streaming mode");
         
@@ -94,7 +94,7 @@ impl NodeArgs {
         // In streaming mode, we just keep the node running
         // State sync will log updates as they come in
         if let (Some(addr_str), Some(peer_id_hex)) = (self.peer_address, self.peer_id) {
-            let net = crate::network::Network::new(); 
+            let net = crate::network::Network::new(Some(std::path::PathBuf::from(".")))?;
             net.connect_to_peer(&addr_str, &peer_id_hex).await?;
         } else {
              println!("[INFO] No peer specified. Use --peer-address and --peer-id to connect.");

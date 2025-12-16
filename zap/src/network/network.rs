@@ -1,22 +1,54 @@
 use crate::network::transport::Transport;
 use anyhow::Result;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use x25519_dalek::{PublicKey, StaticSecret};
 use hex::FromHex;
+
+const IDENTITY_KEY_FILE: &str = "ephemeral_identity_key";
 
 pub struct Network {
     transport: Transport,
 }
 
 impl Network {
-    pub fn new() -> Self {
-        // Generate a random static key for ourselves
+    pub fn new(data_dir: Option<PathBuf>) -> Result<Self> {
+        // Load or generate ephemeral identity (matching Aptos fullnode behavior)
+        let private_key = Self::load_or_generate_identity(data_dir)?;
+        
+        Ok(Self {
+            transport: Transport::new(private_key),
+        })
+    }
+    
+    /// Load ephemeral identity from disk, or generate and save a new one
+    fn load_or_generate_identity(data_dir: Option<PathBuf>) -> Result<StaticSecret> {
+        let identity_path = data_dir
+            .unwrap_or_else(|| PathBuf::from("."))
+            .join(IDENTITY_KEY_FILE);
+        
+        // Try to load existing identity
+        if identity_path.exists() {
+            let bytes = std::fs::read(&identity_path)?;
+            if bytes.len() == 32 {
+                let mut key_bytes = [0u8; 32];
+                key_bytes.copy_from_slice(&bytes);
+                println!("[NETWORK] Loaded ephemeral identity from {:?}", identity_path);
+                return Ok(StaticSecret::from(key_bytes));
+            }
+        }
+        
+        // Generate new identity
         let mut rng = rand::thread_rng();
         let private_key = StaticSecret::new(&mut rng);
+        let public_key = PublicKey::from(&private_key);
         
-        Self {
-            transport: Transport::new(private_key),
-        }
+        // Save to disk
+        std::fs::write(&identity_path, private_key.to_bytes())?;
+        println!("[NETWORK] Generated new ephemeral identity: {}", hex::encode(public_key.as_bytes()));
+        println!("[NETWORK] Saved to {:?}", identity_path);
+        
+        Ok(private_key)
     }
 
     pub async fn connect_to_peer(&self, addr_str: &str, peer_id_hex: &str) -> Result<()> {
@@ -58,18 +90,22 @@ impl Network {
     }
 
     /// Connect to a specific peer using peer ID
-    async fn connect_to_peer_with_id(&self, addr: SocketAddr, peer_id: [u8; 32]) -> Result<()> {
-        let peer_pubkey = PublicKey::from(peer_id);
-        
+    async fn connect_to_peer_with_id(
+        &self,
+        addr: SocketAddr,
+        peer_id: PublicKey,
+        dns_name: &str,
+    ) -> Result<()> {
         println!("[STREAM]   Establishing TCP connection to {}...", addr);
-        let stream = self.transport.connect(addr, peer_pubkey).await?;
+        let stream = tokio::net::TcpStream::connect(addr).await?;
         
-        println!("[STREAM]   ✓ Noise handshake complete");
+        // Get our own peer ID (derived from our public key)
+        let our_peer_id = self.transport.get_peer_id();
         
-        // TODO: Begin state sync protocol
-        // For now, just verify we can connect
-        drop(stream);
+        // Perform Noise handshake with peer ID
+        self.transport.handshake(stream, our_peer_id, peer_id).await?;
         
+        println!("[STREAM] ✓ Successfully connected to {} ({})", dns_name, addr);
         Ok(())
     }
 

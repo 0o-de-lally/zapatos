@@ -66,6 +66,11 @@ impl NoiseConfig {
             public_key,
         }
     }
+    
+    /// Get our public key
+    pub fn public_key(&self) -> &PublicKey {
+        &self.public_key
+    }
 
     pub fn initiate_connection(
         &self,

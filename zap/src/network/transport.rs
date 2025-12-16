@@ -15,11 +15,15 @@ pub struct Transport {
 
 impl Transport {
     pub fn new(private_key: StaticSecret) -> Self {
-        Self {
-            noise_config: NoiseConfig::new(private_key),
-        }
+        let noise_config = NoiseConfig::new(private_key);
+        Self { noise_config }
     }
-
+    
+    /// Get our peer ID (derived from our public key)
+    pub fn get_peer_id(&self) -> [u8; 32] {
+        *self.noise_config.public_key().as_bytes()
+    }
+    
     pub async fn connect(
         &self,
         addr: SocketAddr,
@@ -33,48 +37,58 @@ impl Transport {
         Ok(NoiseStream::new(stream, session))
     }
     
-    async fn handshake_initiator<S>(
+    pub async fn handshake<S>(
         &self,
         mut stream: S,
+        our_peer_id: [u8; 32],
         remote_public_key: PublicKey,
     ) -> Result<(S, NoiseSession, Vec<u8>)>
     where
         S: AsyncRead + AsyncWrite + Unpin + Send,
     {
         println!("[NOISE] Initiating handshake...");
-        let (handshake_state, first_msg) = {
+        
+        // Construct the full message: prologue (our_peer_id + remote_public_key) + noise_message
+        const PEER_ID_LEN: usize = 32;
+        const PROLOGUE_SIZE: usize = PEER_ID_LEN + 32; // peer_id + public_key
+        
+        let (handshake_state, noise_msg) = {
             let mut rng = rand::thread_rng();
-            let prologue = b"aptos-network-handshake-v1";
+            
+            // Create prologue: our_peer_id | remote_public_key
+            let mut prologue = [0u8; PROLOGUE_SIZE];
+            prologue[..PEER_ID_LEN].copy_from_slice(&our_peer_id);
+            prologue[PEER_ID_LEN..].copy_from_slice(remote_public_key.as_bytes());
+            
             self.noise_config.initiate_connection(
                 &mut rng,
-                prologue,
+                &prologue,
                 remote_public_key,
                 None,
             ).map_err(|e| anyhow::anyhow!("Noise init failed: {}", e))?
         };
+        
+        // Construct full client message: prologue + noise_message
+        let mut client_message = Vec::with_capacity(PROLOGUE_SIZE + noise_msg.len());
+        client_message.extend_from_slice(&our_peer_id);
+        client_message.extend_from_slice(remote_public_key.as_bytes());
+        client_message.extend_from_slice(&noise_msg);
 
-        println!("[NOISE] Sending handshake message ({} bytes)...", first_msg.len());
-        let len = first_msg.len() as u32;
-        stream.write_all(&len.to_be_bytes()).await?;
-        stream.write_all(&first_msg).await?;
+        println!("[NOISE] Sending handshake message ({} bytes: {} prologue + {} noise)...", 
+                 client_message.len(), PROLOGUE_SIZE, noise_msg.len());
+        stream.write_all(&client_message).await?;
         stream.flush().await?;
         println!("[NOISE] Handshake message sent, waiting for response...");
 
-        let mut len_bytes = [0u8; 4];
-        stream.read_exact(&mut len_bytes).await
-            .context("Failed to read response length - server closed connection")?;
-        let len = u32::from_be_bytes(len_bytes) as usize;
-        println!("[NOISE] Receiving response ({} bytes)...", len);
-        
-        if len > MAX_SIZE_NOISE_MSG {
-            return Err(anyhow::anyhow!("Handshake response too large"));
-        }
 
-        let mut response_msg = vec![0u8; len];
-        stream.read_exact(&mut response_msg).await?;
-        println!("[NOISE] Response received, finalizing handshake...");
+        // Read server response (fixed size, no length prefix)
+        const SERVER_MESSAGE_SIZE: usize = 48; // From Aptos handshake.rs
+        let mut server_response = [0u8; SERVER_MESSAGE_SIZE];
+        stream.read_exact(&mut server_response).await
+            .context("Failed to read server response")?;
+        println!("[NOISE] Response received ({} bytes), finalizing handshake...", SERVER_MESSAGE_SIZE);
 
-        let (payload, session) = self.noise_config.finalize_connection(handshake_state, &response_msg)
+        let (payload, session) = self.noise_config.finalize_connection(handshake_state, &server_response)
              .map_err(|e| anyhow::anyhow!("Noise finalize failed: {}", e))?;
 
         println!("[NOISE] Handshake complete!");

@@ -14,23 +14,15 @@ pub struct SeedPeer {
 
 /// Get mainnet seed peers with their peer IDs
 ///
-/// These are actual validator addresses from the mainnet ValidatorSet.
-/// The peer IDs were extracted from the BCS-encoded network_addresses field.
+/// These are extracted from the on-chain ValidatorSet fullnode_addresses field
 pub fn mainnet_seeds() -> Vec<SeedPeer> {
     vec![
-        // Public Fullnode from Bison Trails (port 6182 - accepts public connections)
+        // Bison Trails Public Fullnode (extracted from ValidatorSet on-chain)
         SeedPeer {
             dns_name: "fullnode.bbb76d2d-02b5-4e3e-bfc3-9f10a2e69849.aptos.bison.run".to_string(),
             port: 6182,
             peer_id: hex_literal::hex!("202494f31865a994a7ef8c2723a5f3fcfa05a8dad872e7420de8c542dac59fb1"),
         },
-        // Validator from Bison Trails (port 6180 - validator-only, for reference)
-        // SeedPeer {
-        //     dns_name: "validator.bbb76d2d-02b5-4e3e-bfc3-9f10a2e69849.aptos.bison.run".to_string(),
-        //     port: 6180,
-        //     peer_id: hex_literal::hex!("203601215a079b0114a32104bd02149cf2258a206c8f8c79790e0684f4adfeae"),
-        // },
-        // TODO: Add more PFN addresses from other validators' fullnode_addresses field
     ]
 }
 

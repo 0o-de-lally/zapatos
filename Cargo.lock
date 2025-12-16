@@ -19956,6 +19956,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "zap"
+version = "0.1.0"
+dependencies = [
+ "aes-gcm",
+ "anyhow",
+ "bcs 0.1.4",
+ "bytes",
+ "clap 4.5.21",
+ "ed25519-dalek 1.0.1",
+ "futures",
+ "hex",
+ "hkdf 0.10.0",
+ "more-asserts",
+ "move-core-types",
+ "once_cell",
+ "rand 0.7.3",
+ "ring 0.16.20",
+ "serde",
+ "serde_bytes",
+ "serde_json",
+ "serde_yaml 0.8.26",
+ "sha2 0.9.9",
+ "thiserror",
+ "tiny-keccak",
+ "tokio",
+ "tokio-util 0.7.10",
+ "x25519-dalek",
+]
+
+[[package]]
 name = "zerocopy"
 version = "0.7.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"

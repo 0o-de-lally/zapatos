@@ -1,0 +1,193 @@
+    Checking zap v0.1.0 (/Users/lucas/code/rust/zapatos/zap)
+error[E0428]: the name `StateKey` is defined multiple times
+  --> zap/src/types/state_store.rs:26:1
+   |
+5  | pub struct StateKey {
+   | ------------------- previous definition of the type `StateKey` here
+...
+26 | pub struct StateKey {
+   | ^^^^^^^^^^^^^^^^^^^ `StateKey` redefined here
+   |
+   = note: `StateKey` must be defined only once in the type namespace of this module
+
+warning: unused import: `bytes::Bytes`
+ --> zap/src/crypto/hash.rs:1:5
+  |
+1 | use bytes::Bytes;
+  |     ^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `more_asserts::debug_assert_lt`
+ --> zap/src/crypto/hash.rs:3:5
+  |
+3 | use more_asserts::debug_assert_lt;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `once_cell::sync::Lazy`
+ --> zap/src/crypto/hash.rs:4:5
+  |
+4 | use once_cell::sync::Lazy;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `anyhow`
+ --> zap/src/crypto/noise.rs:1:14
+  |
+1 | use anyhow::{anyhow, Result};
+  |              ^^^^^^
+
+warning: unused import: `crate::crypto::HashValue`
+ --> zap/src/crypto/noise.rs:6:5
+  |
+6 | use crate::crypto::HashValue;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::convert::TryFrom`
+ --> zap/src/crypto/noise.rs:8:5
+  |
+8 | use std::convert::TryFrom;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `NoiseStream`
+ --> zap/src/network/network.rs:1:44
+  |
+1 | use crate::network::transport::{Transport, NoiseStream};
+  |                                            ^^^^^^^^^^^
+
+warning: unused import: `std::str::FromStr`
+ --> zap/src/network/network.rs:4:5
+  |
+4 | use std::str::FromStr;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `tokio::net::TcpStream`
+ --> zap/src/network/network.rs:5:5
+  |
+5 | use tokio::net::TcpStream;
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `tokio_util::compat::Compat`
+ --> zap/src/network/network.rs:6:5
+  |
+6 | use tokio_util::compat::Compat;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `AES_GCM_TAGLEN`
+ --> zap/src/network/transport.rs:1:75
+  |
+1 | use crate::crypto::noise::{NoiseConfig, NoiseSession, MAX_SIZE_NOISE_MSG, AES_GCM_TAGLEN};
+  |                                                                           ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::crypto::HashValue`
+ --> zap/src/storage/aptos_db.rs:1:5
+  |
+1 | use crate::crypto::HashValue;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ensure`
+ --> zap/src/types/waypoints.rs:2:14
+  |
+2 | use anyhow::{ensure, format_err, Error, Result};
+  |              ^^^^^^
+
+warning: unused imports: `Deserialize`, `Deserializer`, `Serialize`, and `Serializer`
+ --> zap/src/types/waypoints.rs:3:13
+  |
+3 | use serde::{Deserialize, Deserializer, Serialize, Serializer};
+  |             ^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^
+
+error[E0119]: conflicting implementations of trait `Clone` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:10
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |          ----- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |          ^^^^^ conflicting implementation for `state_store::StateKey`
+
+error[E0119]: conflicting implementations of trait `Debug` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:17
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |                 ----- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |                 ^^^^^ conflicting implementation for `state_store::StateKey`
+
+error[E0119]: conflicting implementations of trait `Deserialize<'_>` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:73
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |                                                  ----------- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |                                                                         ^^^^^^^^^^^ conflicting implementation for `state_store::StateKey`
+   |
+   = note: this error originates in the derive macro `Deserialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0119]: conflicting implementations of trait `StructuralPartialEq` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:28
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |                            --------- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |                            ^^^^^^^^^ conflicting implementation for `state_store::StateKey`
+
+error[E0119]: conflicting implementations of trait `PartialEq` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:28
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |                            --------- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |                            ^^^^^^^^^ conflicting implementation for `state_store::StateKey`
+
+error[E0119]: conflicting implementations of trait `Serialize` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:62
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |                                       --------- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |                                                              ^^^^^^^^^ conflicting implementation for `state_store::StateKey`
+   |
+   = note: this error originates in the derive macro `Serialize` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0119]: conflicting implementations of trait `std::cmp::Eq` for type `state_store::StateKey`
+  --> zap/src/types/state_store.rs:24:24
+   |
+4  | #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+   |                        -- first implementation here
+...
+24 | #[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+   |                        ^^ conflicting implementation for `state_store::StateKey`
+
+warning: unused variable: `txn`
+  --> zap/src/network/network.rs:71:41
+   |
+71 |     pub fn broadcast_transaction(&self, txn: &[u8]) {
+   |                                         ^^^ help: if this is intentional, prefix it with an underscore: `_txn`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `cx`
+   --> zap/src/network/transport.rs:100:9
+    |
+100 |         cx: &mut TaskContext<'_>,
+    |         ^^ help: if this is intentional, prefix it with an underscore: `_cx`
+
+warning: variable does not need to be mutable
+   --> zap/src/network/transport.rs:129:9
+    |
+129 |         mut self: Pin<&mut Self>,
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+Some errors have detailed explanations: E0119, E0428.
+For more information about an error, try `rustc --explain E0119`.
+warning: `zap` (lib) generated 17 warnings
+error: could not compile `zap` (lib) due to 8 previous errors; 17 warnings emitted

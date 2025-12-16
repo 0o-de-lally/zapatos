@@ -1,0 +1,30 @@
+[package]
+name = "zap"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+aes-gcm = { workspace = true }
+bcs = { workspace = true }
+bytes = { workspace = true }
+clap = { workspace = true }
+ed25519-dalek = { workspace = true }
+futures = { workspace = true }
+hex = { workspace = true }
+hkdf = { workspace = true }
+more-asserts = { workspace = true }
+once_cell = { workspace = true }
+rand = { workspace = true }
+ring = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }
+tiny-keccak = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+x25519-dalek = { workspace = true }
+move-core-types = { workspace = true }
+serde_bytes = { workspace = true }

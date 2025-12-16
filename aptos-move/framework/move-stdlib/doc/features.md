@@ -141,6 +141,7 @@ return true.
 -  [Function `is_account_abstraction_enabled`](#0x1_features_is_account_abstraction_enabled)
 -  [Function `get_bulletproofs_batch_feature`](#0x1_features_get_bulletproofs_batch_feature)
 -  [Function `bulletproofs_batch_enabled`](#0x1_features_bulletproofs_batch_enabled)
+-  [Function `get_derivable_account_abstraction_feature`](#0x1_features_get_derivable_account_abstraction_feature)
 -  [Function `is_derivable_account_abstraction_enabled`](#0x1_features_is_derivable_account_abstraction_enabled)
 -  [Function `is_domain_account_abstraction_enabled`](#0x1_features_is_domain_account_abstraction_enabled)
 -  [Function `get_new_accounts_default_to_fa_store_feature`](#0x1_features_get_new_accounts_default_to_fa_store_feature)
@@ -3641,6 +3642,28 @@ Deprecated feature
 
 </details>
 
+<a id="0x1_features_get_derivable_account_abstraction_feature"></a>
+
+## Function `get_derivable_account_abstraction_feature`
+
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_derivable_account_abstraction_feature">get_derivable_account_abstraction_feature</a>(): u64
+</code></pre>
+
+
+
+<details>
+<summary>Implementation</summary>
+
+
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_get_derivable_account_abstraction_feature">get_derivable_account_abstraction_feature</a>(): u64 { <a href="features.md#0x1_features_DERIVABLE_ACCOUNT_ABSTRACTION">DERIVABLE_ACCOUNT_ABSTRACTION</a> }
+</code></pre>
+
+
+
+</details>
+
 <a id="0x1_features_is_derivable_account_abstraction_enabled"></a>
 
 ## Function `is_derivable_account_abstraction_enabled`
@@ -4048,7 +4071,7 @@ Governance proposals should use <code><a href="features.md#0x1_features_change_f
 Update feature flags directly. Only used in genesis/tests.
 
 
-<pre><code><b>fun</b> <a href="features.md#0x1_features_change_feature_flags_internal">change_feature_flags_internal</a>(framework: &<a href="signer.md#0x1_signer">signer</a>, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;)
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_change_feature_flags_internal">change_feature_flags_internal</a>(framework: &<a href="signer.md#0x1_signer">signer</a>, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;)
 </code></pre>
 
 
@@ -4057,7 +4080,7 @@ Update feature flags directly. Only used in genesis/tests.
 <summary>Implementation</summary>
 
 
-<pre><code><b>fun</b> <a href="features.md#0x1_features_change_feature_flags_internal">change_feature_flags_internal</a>(framework: &<a href="signer.md#0x1_signer">signer</a>, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;) <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_change_feature_flags_internal">change_feature_flags_internal</a>(framework: &<a href="signer.md#0x1_signer">signer</a>, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;) <b>acquires</b> <a href="features.md#0x1_features_Features">Features</a> {
     <b>assert</b>!(<a href="signer.md#0x1_signer_address_of">signer::address_of</a>(framework) == @std, <a href="error.md#0x1_error_permission_denied">error::permission_denied</a>(<a href="features.md#0x1_features_EFRAMEWORK_SIGNER_NEEDED">EFRAMEWORK_SIGNER_NEEDED</a>));
     <b>if</b> (!<b>exists</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(@std)) {
         <b>move_to</b>&lt;<a href="features.md#0x1_features_Features">Features</a>&gt;(framework, <a href="features.md#0x1_features_Features">Features</a> { <a href="features.md#0x1_features">features</a>: <a href="vector.md#0x1_vector">vector</a>[] })
@@ -4507,7 +4530,7 @@ Helper to check whether a feature flag is enabled.
 ### Function `change_feature_flags_internal`
 
 
-<pre><code><b>fun</b> <a href="features.md#0x1_features_change_feature_flags_internal">change_feature_flags_internal</a>(framework: &<a href="signer.md#0x1_signer">signer</a>, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;)
+<pre><code><b>public</b> <b>fun</b> <a href="features.md#0x1_features_change_feature_flags_internal">change_feature_flags_internal</a>(framework: &<a href="signer.md#0x1_signer">signer</a>, enable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;, disable: <a href="vector.md#0x1_vector">vector</a>&lt;u64&gt;)
 </code></pre>
 
 

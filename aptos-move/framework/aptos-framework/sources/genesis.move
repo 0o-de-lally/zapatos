@@ -139,7 +139,7 @@ module aptos_framework::genesis {
         nonce_validation::initialize(&aptos_framework_account);
 
         // Enable derivable account abstraction feature (flag 88)
-        features::change_feature_flags_for_next_epoch(&aptos_framework_account, vector[88], vector[]);
+        features::change_feature_flags_internal(&aptos_framework_account, vector[features::get_derivable_account_abstraction_feature()], vector[]);
 
         // Initialize account abstraction
         account_abstraction::initialize(&aptos_framework_account);

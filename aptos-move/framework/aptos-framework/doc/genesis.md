@@ -371,7 +371,7 @@ Genesis step 1: Initialize aptos framework account and core modules on chain.
     <a href="nonce_validation.md#0x1_nonce_validation_initialize">nonce_validation::initialize</a>(&aptos_framework_account);
 
     // Enable derivable <a href="account.md#0x1_account">account</a> abstraction feature (flag 88)
-    <a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_change_feature_flags_for_next_epoch">features::change_feature_flags_for_next_epoch</a>(&aptos_framework_account, <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[88], <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[]);
+    <a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_change_feature_flags_internal">features::change_feature_flags_internal</a>(&aptos_framework_account, <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[<a href="../../aptos-stdlib/../move-stdlib/doc/features.md#0x1_features_get_derivable_account_abstraction_feature">features::get_derivable_account_abstraction_feature</a>()], <a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>[]);
 
     // Initialize <a href="account.md#0x1_account">account</a> abstraction
     <a href="account_abstraction.md#0x1_account_abstraction_initialize">account_abstraction::initialize</a>(&aptos_framework_account);

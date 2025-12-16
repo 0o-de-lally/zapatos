@@ -3,13 +3,13 @@ use std::path::Path;
 
 pub struct AptosDB {
     // Placeholder for RocksDB instance
-    path: std::path::PathBuf,
+    _path: std::path::PathBuf,
 }
 
 impl AptosDB {
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
         Ok(Self {
-            path: path.as_ref().to_path_buf(),
+            _path: path.as_ref().to_path_buf(),
         })
     }
     

@@ -4,13 +4,16 @@ use anyhow::Result;
 use std::sync::Arc;
 
 pub struct StateSync {
-    network: Arc<Network>,
-    storage: Arc<AptosDB>,
+    _network: Arc<Network>,
+    _storage: Arc<AptosDB>,
 }
 
 impl StateSync {
     pub fn new(network: Arc<Network>, storage: Arc<AptosDB>) -> Self {
-        Self { network, storage }
+        Self { 
+            _network: network, 
+            _storage: storage 
+        }
     }
 
     pub fn start(&self) -> Result<()> {

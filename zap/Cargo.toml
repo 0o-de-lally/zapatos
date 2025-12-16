@@ -17,8 +17,6 @@ ed25519-dalek = { workspace = true }
 futures = { workspace = true }
 hex = { workspace = true }
 hkdf = { workspace = true }
-more-asserts = { workspace = true }
-once_cell = { workspace = true }
 rand = { workspace = true }
 ring = { workspace = true }
 serde = { workspace = true }
@@ -32,3 +30,9 @@ tokio-util = { workspace = true }
 x25519-dalek = { workspace = true }
 move-core-types = { workspace = true }
 serde_bytes = { workspace = true }
+
+[dev-dependencies]
+# Test-only dependencies
+more-asserts = { workspace = true }
+once_cell = { workspace = true }
+

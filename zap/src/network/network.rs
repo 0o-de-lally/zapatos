@@ -1,8 +1,6 @@
 use crate::network::transport::Transport;
-use crate::crypto::ed25519::{Ed25519PrivateKey, Ed25519PublicKey};
 use anyhow::Result;
 use std::net::SocketAddr;
-use std::str::FromStr;
 use x25519_dalek::{PublicKey, StaticSecret};
 use hex::FromHex;
 

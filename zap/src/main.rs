@@ -1,11 +1,9 @@
 use clap::Parser;
-use zap::ZapArgs;
+use zap::NodeArgs;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let args = ZapArgs::parse();
-    // Initialize logger if needed
-    // ...
+    let args = NodeArgs::parse();
     args.run().await?;
     Ok(())
 }

@@ -1,6 +1,5 @@
 use crate::crypto::HashValue;
-use anyhow::{ensure, format_err, Error, Result};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use anyhow::{format_err, Error, Result};
 use std::str::FromStr;
 use std::fmt;
 

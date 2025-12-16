@@ -1,4 +1,4 @@
-use crate::crypto::noise::{NoiseConfig, NoiseSession, MAX_SIZE_NOISE_MSG, AES_GCM_TAGLEN};
+use crate::crypto::noise::{NoiseConfig, NoiseSession, MAX_SIZE_NOISE_MSG};
 use anyhow::{Context, Result};
 use futures::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use std::net::SocketAddr;
@@ -97,7 +97,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> AsyncRead for NoiseStream<S> {
     
     fn poll_read(
         mut self: Pin<&mut Self>,
-        cx: &mut TaskContext<'_>,
+        _cx: &mut TaskContext<'_>,
         buf: &mut [u8],
     ) -> Poll<std::io::Result<usize>> {
         // If we have data in buffer, return it
@@ -126,7 +126,7 @@ impl<S: AsyncRead + AsyncWrite + Unpin> AsyncRead for NoiseStream<S> {
 
 impl<S: AsyncRead + AsyncWrite + Unpin> AsyncWrite for NoiseStream<S> {
      fn poll_write(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         _cx: &mut TaskContext<'_>,
         buf: &[u8],
     ) -> Poll<std::io::Result<usize>> {

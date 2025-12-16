@@ -1,9 +1,8 @@
-use crate::network::transport::{Transport, NoiseStream};
+use crate::network::transport::Transport;
+use crate::crypto::ed25519::{Ed25519PrivateKey, Ed25519PublicKey};
 use anyhow::Result;
 use std::net::SocketAddr;
 use std::str::FromStr;
-use tokio::net::TcpStream;
-use tokio_util::compat::Compat;
 use x25519_dalek::{PublicKey, StaticSecret};
 use hex::FromHex;
 
@@ -68,7 +67,7 @@ impl Network {
         Ok(())
     }
 
-    pub fn broadcast_transaction(&self, txn: &[u8]) {
+    pub fn broadcast_transaction(&self, _txn: &[u8]) {
         // Mock broadcast
     }
 }

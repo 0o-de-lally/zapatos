@@ -1,4 +1,3 @@
-use crate::crypto::HashValue;
 use anyhow::Result;
 use std::path::Path;
 

@@ -1,7 +1,9 @@
-use anyhow::{anyhow, Result};
-use ring::aead::{self, Aad, LessSafeKey, UnboundKey};
+use anyhow::Result;
+use aes_gcm::{Aes256Gcm, KeyInit};
+use aes_gcm::aead::{Aead, Payload};
+use bytes::Bytes;
 use hkdf::Hkdf;
-use sha2::Digest;
+use sha2::Sha256;
 use x25519_dalek::{PublicKey, StaticSecret};
 use crate::crypto::HashValue;
 use std::io::{Cursor, Read, Write};

@@ -2,7 +2,7 @@
 pub mod fixtures;
 
 #[cfg(test)]
-pub mod debug_genesis;
-
-#[cfg(test)]
-pub mod find_enum;
+pub mod load_mainnet_fixtures;
+mod debug_genesis;
+mod find_enum;
+mod deserialize_network_address;

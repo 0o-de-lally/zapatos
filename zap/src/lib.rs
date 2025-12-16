@@ -81,9 +81,14 @@ impl NodeArgs {
         }
 
         // Initialize network (no storage in streaming mode)
-        let _network = std::sync::Arc::new(crate::network::Network::new());
+        let network = std::sync::Arc::new(crate::network::Network::new());
         
         println!("[STREAM] Node initialized in streaming mode");
+        
+        // Connect to mainnet seed peers
+        println!("[STREAM] Initiating connection to Aptos mainnet...");
+        network.connect_to_mainnet_seeds().await?;
+        
         println!("[STREAM] Waiting for state sync updates...");
         
         // In streaming mode, we just keep the node running

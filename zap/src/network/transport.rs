@@ -41,6 +41,7 @@ impl Transport {
     where
         S: AsyncRead + AsyncWrite + Unpin + Send,
     {
+        println!("[NOISE] Initiating handshake...");
         let (handshake_state, first_msg) = {
             let mut rng = rand::thread_rng();
             let prologue = b"aptos-network-handshake-v1";
@@ -52,14 +53,18 @@ impl Transport {
             ).map_err(|e| anyhow::anyhow!("Noise init failed: {}", e))?
         };
 
+        println!("[NOISE] Sending handshake message ({} bytes)...", first_msg.len());
         let len = first_msg.len() as u32;
         stream.write_all(&len.to_be_bytes()).await?;
         stream.write_all(&first_msg).await?;
         stream.flush().await?;
+        println!("[NOISE] Handshake message sent, waiting for response...");
 
         let mut len_bytes = [0u8; 4];
-        stream.read_exact(&mut len_bytes).await?;
+        stream.read_exact(&mut len_bytes).await
+            .context("Failed to read response length - server closed connection")?;
         let len = u32::from_be_bytes(len_bytes) as usize;
+        println!("[NOISE] Receiving response ({} bytes)...", len);
         
         if len > MAX_SIZE_NOISE_MSG {
             return Err(anyhow::anyhow!("Handshake response too large"));
@@ -67,10 +72,12 @@ impl Transport {
 
         let mut response_msg = vec![0u8; len];
         stream.read_exact(&mut response_msg).await?;
+        println!("[NOISE] Response received, finalizing handshake...");
 
         let (payload, session) = self.noise_config.finalize_connection(handshake_state, &response_msg)
              .map_err(|e| anyhow::anyhow!("Noise finalize failed: {}", e))?;
 
+        println!("[NOISE] Handshake complete!");
         Ok((stream, session, payload))
     }
 }

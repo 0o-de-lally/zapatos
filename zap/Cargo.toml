@@ -31,6 +31,7 @@ x25519-dalek = { workspace = true }
 move-core-types = { workspace = true }
 serde_bytes = { workspace = true }
 reqwest = { workspace = true }
+hex-literal = { workspace = true }
 
 [dev-dependencies]
 # Test-only dependencies

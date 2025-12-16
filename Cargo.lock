@@ -19967,6 +19967,7 @@ dependencies = [
  "ed25519-dalek 1.0.1",
  "futures",
  "hex",
+ "hex-literal",
  "hkdf 0.10.0",
  "more-asserts",
  "move-core-types",

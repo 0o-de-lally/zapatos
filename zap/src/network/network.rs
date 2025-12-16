@@ -54,43 +54,65 @@ impl Network {
              _ => println!("Received other response"),
         }
         
-        // Keep connection open slightly
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        Ok(())
+    }
+
+    /// Connect to a specific peer using peer ID
+    async fn connect_to_peer_with_id(&self, addr: SocketAddr, peer_id: [u8; 32]) -> Result<()> {
+        let peer_pubkey = PublicKey::from(peer_id);
+        
+        println!("[STREAM]   Establishing TCP connection to {}...", addr);
+        let stream = self.transport.connect(addr, peer_pubkey).await?;
+        
+        println!("[STREAM]   ✓ Noise handshake complete");
+        
+        // TODO: Begin state sync protocol
+        // For now, just verify we can connect
+        drop(stream);
         
         Ok(())
     }
 
-    /// Connect to Aptos mainnet seed peers using DNS discovery
+    /// Connect to mainnet seed peers using Noise IK handshake
     pub async fn connect_to_mainnet_seeds(&self) -> Result<()> {
         use crate::config::seeds::{mainnet_seeds, resolve_seed};
         
         let seeds = mainnet_seeds();
-        println!("[STREAM] Connecting to {} mainnet seed peer(s)...", seeds.len());
+        println!("[STREAM] Attempting to connect to {} mainnet seed(s)", seeds.len());
         
         for seed in &seeds {
-            println!("[STREAM] Resolving DNS: {}:{}", seed.dns_name, seed.port);
+            println!("[STREAM] Connecting to {} (port {})", seed.dns_name, seed.port);
+            println!("[STREAM]   Peer ID: {}", hex::encode(&seed.peer_id));
             
+            // Resolve DNS to IP addresses
             match resolve_seed(seed).await {
                 Ok(addrs) => {
-                    println!("[STREAM] Resolved to {} address(es)", addrs.len());
+                    println!("[STREAM]   Resolved to {} address(es)", addrs.len());
+                    for addr in &addrs {
+                        println!("[STREAM]     - {}", addr);
+                    }
                     
                     // Try to connect to the first resolved address
-                    if let Some(addr) = addrs.first() {
-                        println!("[STREAM] Attempting connection to {}...", addr);
-                        
-                        // For DNS-based discovery, we don't have the peer ID upfront
-                        // We'll need to handle this differently - for now, skip the connection
-                        // and just verify DNS resolution works
-                        println!("[STREAM] DNS resolution successful for {}", seed.dns_name);
+                    if let Some(socket_addr) = addrs.first() {
+                        match self.connect_to_peer_with_id(*socket_addr, seed.peer_id).await {
+                            Ok(()) => {
+                                println!("[STREAM] ✓ Successfully connected to {}", seed.dns_name);
+                                // For now, just connect to one seed
+                                return Ok(());
+                            }
+                            Err(e) => {
+                                println!("[STREAM] ✗ Failed to connect: {}", e);
+                            }
+                        }
                     }
                 }
                 Err(e) => {
-                    println!("[WARN] Failed to resolve {}: {}", seed.dns_name, e);
+                    println!("[STREAM] ✗ Failed to resolve {}: {}", seed.dns_name, e);
                 }
             }
         }
         
-        Ok(())
+        anyhow::bail!("Failed to connect to any mainnet seeds")
     }
 
     pub fn start(&self) -> Result<()> {

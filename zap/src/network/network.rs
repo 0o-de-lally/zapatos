@@ -84,29 +84,40 @@ impl Network {
         // In a real implementation we would dynamically dispatch based on protocols.
         // For now, assume if handshake passed, we can try GetServerProtocolVersion.
         
-        use crate::state_sync::message::{StorageServiceRequest, DataRequest, StorageServiceResponse, DataResponse};
+        use crate::state_sync::message::{
+    DataRequest, StorageServiceRequest, StorageServiceResponseWrapper, DataResponse,
+};
         
-        let request = StorageServiceRequest {
-            data_request: DataRequest::GetServerProtocolVersion,
-            use_compression: false, 
-        };
+        // Send GetStorageServerSummary to find latest ledger info
+        let request = StorageServiceRequest::new(
+            DataRequest::GetStorageServerSummary,
+            false, // no compression
+        );
         
         let msg_bytes = bcs::to_bytes(&request)?;
         stream.write_message(&msg_bytes).await?;
-        println!("Sent GetServerProtocolVersion request");
+        println!("[SYNC] Sent GetStorageServerSummary request");
         
         // Read response
         let resp_bytes = stream.read_message().await?;
-        println!("Received {} bytes", resp_bytes.len());
+        println!("[SYNC] Received {} bytes response", resp_bytes.len());
         
-        let response: StorageServiceResponse = bcs::from_bytes(&resp_bytes)?;
-        println!("Received Response: {:?}", response);
+        // Try deserializing as the Wrapper (Enum)
+        let response: StorageServiceResponseWrapper = bcs::from_bytes(&resp_bytes)?;
         
         match response {
-             StorageServiceResponse::RawResponse(DataResponse::ServerProtocolVersion(v)) => {
-                 println!("Server Protocol Version: {}", v.protocol_version);
-             }
-             _ => println!("Received other response"),
+            StorageServiceResponseWrapper::RawResponse(DataResponse::StorageServerSummary(summary)) => {
+                if let Some(ledger_info) = summary.data_summary.synced_ledger_info {
+                    println!("[SYNC] ✓ Latest Synced Ledger Info:");
+                    // The Display impl for LedgerInfoWithSignatures prints version/epoch/ts
+                    println!("[SYNC]   {}", ledger_info); 
+                    println!("[SYNC]   Block ID: {}", ledger_info.ledger_info().consensus_block_id());
+                } else {
+                    println!("[SYNC] Peer has no synced ledger info available.");
+                }
+            }
+            StorageServiceResponseWrapper::RawResponse(other) => println!("[SYNC] Received unexpected data response: {:?}", other),
+            StorageServiceResponseWrapper::CompressedResponse(_) => println!("[SYNC] Received compressed response (unexpected)"),
         }
         
         Ok(())

@@ -3,11 +3,11 @@ use std::path::PathBuf;
 use crate::mode::NodeMode;
 
 pub mod config;
-pub mod crypto;
 pub mod network;
 pub mod state_sync;
-pub mod storage;
+pub mod crypto;
 pub mod types;
+pub mod storage;
 pub mod mode;
 
 #[cfg(test)]

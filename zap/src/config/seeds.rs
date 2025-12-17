@@ -12,9 +12,22 @@ pub struct SeedPeer {
     pub peer_id: [u8; 32],  // x25519 public key from NoiseIK protocol
 }
 
-/// Get mainnet seed peers with their peer IDs
-///
-/// These are extracted from the on-chain ValidatorSet fullnode_addresses field
+/// Get mainnet seed peers (Dynamic Discovery + Fallback)
+pub async fn get_seeds() -> Vec<SeedPeer> {
+    use crate::config::discovery::fetch_mainnet_seeds;
+    
+    match fetch_mainnet_seeds().await {
+        Ok(seeds) if !seeds.is_empty() => {
+             return seeds;
+        }
+        Ok(_) => println!("[SEEDS] Discovery returned no seeds, using hardcoded fallback."),
+        Err(e) => println!("[SEEDS] Discovery failed ({}), using hardcoded fallback.", e),
+    }
+
+    mainnet_seeds()
+}
+
+/// Hardcoded fallback seeds
 pub fn mainnet_seeds() -> Vec<SeedPeer> {
     vec![
         // Bison Trails Public Fullnode (extracted from ValidatorSet on-chain)

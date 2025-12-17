@@ -60,7 +60,30 @@ impl Network {
         let mut stream = self.transport.connect(addr, peer_id).await?;
         println!("Connected and Handshake/Noise established!");
         
-        // Send a simple request: GetServerProtocolVersion
+        // --- Aptos Handshake Protocol v1 ---
+        use crate::network::handshake::{HandshakeMsg, ChainId, NetworkId};
+        
+        // 1. Send our HandshakeMsg
+        // Minimal defaults: Mainnet, Public Network
+        let our_handshake = HandshakeMsg::new(ChainId::MAINNET, NetworkId::Public);
+        let msg_bytes = bcs::to_bytes(&our_handshake)?;
+        stream.write_message(&msg_bytes).await?;
+        println!("[HANDSHAKE] Sent HandshakeMsg: {:?}", our_handshake);
+        
+        // 2. Receive their HandshakeMsg
+        let resp_bytes = stream.read_message().await?;
+        let their_handshake: HandshakeMsg = bcs::from_bytes(&resp_bytes)?;
+        println!("[HANDSHAKE] Received HandshakeMsg: {:?}", their_handshake);
+        
+        // 3. Negotiate
+        let (version, protocols) = our_handshake.perform_handshake(&their_handshake)?;
+        println!("[HANDSHAKE] Negotiated Version: {:?}, Protocols: {:?}", version, protocols);
+        
+        // --- Application Layer ---
+        // Verify StorageServiceRpc is supported
+        // In a real implementation we would dynamically dispatch based on protocols.
+        // For now, assume if handshake passed, we can try GetServerProtocolVersion.
+        
         use crate::state_sync::message::{StorageServiceRequest, DataRequest, StorageServiceResponse, DataResponse};
         
         let request = StorageServiceRequest {
@@ -103,6 +126,8 @@ impl Network {
         let our_peer_id = self.transport.get_peer_id();
         
         // Perform Noise handshake with peer ID
+        use tokio_util::compat::TokioAsyncReadCompatExt;
+        let stream = stream.compat();
         self.transport.handshake(stream, our_peer_id, peer_id).await?;
         
         println!("[STREAM] ✓ Successfully connected to {} ({})", dns_name, addr);
@@ -111,9 +136,9 @@ impl Network {
 
     /// Connect to mainnet seed peers using Noise IK handshake
     pub async fn connect_to_mainnet_seeds(&self) -> Result<()> {
-        use crate::config::seeds::{mainnet_seeds, resolve_seed};
+        use crate::config::seeds::{get_seeds, resolve_seed};
         
-        let seeds = mainnet_seeds();
+        let seeds = get_seeds().await;
         println!("[STREAM] Attempting to connect to {} mainnet seed(s)", seeds.len());
         
         for seed in &seeds {
@@ -130,7 +155,8 @@ impl Network {
                     
                     // Try to connect to the first resolved address
                     if let Some(socket_addr) = addrs.first() {
-                        match self.connect_to_peer_with_id(*socket_addr, seed.peer_id).await {
+                         let peer_id_pub = PublicKey::from(seed.peer_id);
+                         match self.connect_to_peer_with_id(*socket_addr, peer_id_pub, &seed.dns_name).await {
                             Ok(()) => {
                                 println!("[STREAM] ✓ Successfully connected to {}", seed.dns_name);
                                 // For now, just connect to one seed

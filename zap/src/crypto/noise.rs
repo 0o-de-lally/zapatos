@@ -49,6 +49,14 @@ pub struct InitiatorHandshakeState {
     rs: PublicKey,
 }
 
+#[derive(Clone)]
+pub struct ResponderHandshakeState {
+    h: Vec<u8>,
+    ck: Vec<u8>,
+    rs: PublicKey,
+    re: PublicKey,
+}
+
 pub struct NoiseSession {
     valid: bool,
     remote_public_key: PublicKey,
@@ -174,6 +182,119 @@ impl NoiseConfig {
          let session = NoiseSession::new(k1, k2, rs);
 
          Ok((plaintext.to_vec(), session))
+    }
+
+    // --- Responder Logic ---
+
+    pub fn parse_client_init_message(
+        &self,
+        prologue: &[u8],
+        received_message: &[u8],
+    ) -> Result<(PublicKey, ResponderHandshakeState, Vec<u8>), NoiseError> {
+        if received_message.len() > MAX_SIZE_NOISE_MSG {
+            return Err(NoiseError::ReceivedMsgTooLarge);
+        }
+        
+        let mut h = PROTOCOL_NAME.to_vec();
+        let mut ck = PROTOCOL_NAME.to_vec();
+        mix_hash(&mut h, prologue);
+        mix_hash(&mut h, self.public_key.as_bytes());
+
+        let mut cursor = Cursor::new(received_message);
+
+        // <- e
+        let mut re_bytes = [0u8; 32];
+        cursor.read_exact(&mut re_bytes).map_err(|_| NoiseError::MsgTooShort)?;
+        mix_hash(&mut h, &re_bytes);
+        let re = PublicKey::from(re_bytes);
+
+        // <- es
+        let dh_output = self.private_key.diffie_hellman(&re);
+        let k = mix_key(&mut ck, dh_output.as_bytes())?;
+
+        // <- s
+        let mut encrypted_rs = [0u8; 32 + AES_GCM_TAGLEN];
+        cursor.read_exact(&mut encrypted_rs).map_err(|_| NoiseError::MsgTooShort)?;
+
+        let aead = aes_key(&k[..]);
+        let mut in_out = encrypted_rs.to_vec();
+        let nonce = aead::Nonce::assume_unique_for_key([0u8; AES_NONCE_SIZE]);
+        let rs_bytes = aead.open_in_place(nonce, Aad::from(&h), &mut in_out)
+            .map_err(|_| NoiseError::Decrypt)?;
+            
+        let mut rs_arr = [0u8; 32];
+        if rs_bytes.len() != 32 { return Err(NoiseError::Decrypt); }
+        rs_arr.copy_from_slice(rs_bytes);
+        let rs = PublicKey::from(rs_arr);
+        
+        mix_hash(&mut h, &encrypted_rs);
+
+        // <- ss
+        let dh_output = self.private_key.diffie_hellman(&rs);
+        let k = mix_key(&mut ck, dh_output.as_bytes())?;
+
+        // <- payload
+        let offset = cursor.position() as usize;
+        let received_encrypted_payload = &received_message[offset..];
+        
+        let aead = aes_key(&k[..]);
+        let mut in_out = received_encrypted_payload.to_vec();
+        let nonce = aead::Nonce::assume_unique_for_key([0u8; AES_NONCE_SIZE]);
+        let received_payload = aead.open_in_place(nonce, Aad::from(&h), &mut in_out)
+            .map_err(|_| NoiseError::Decrypt)?;
+            
+        mix_hash(&mut h, received_encrypted_payload);
+
+        let state = ResponderHandshakeState { h, ck, rs, re };
+        Ok((rs, state, received_payload.to_vec()))
+    }
+
+    pub fn respond_to_client(
+        &self,
+        rng: &mut (impl rand::RngCore + rand::CryptoRng),
+        handshake_state: ResponderHandshakeState,
+        payload: Option<&[u8]>,
+        response_buffer: &mut [u8],
+    ) -> Result<NoiseSession, NoiseError> {
+        let payload_len = payload.map(<[u8]>::len).unwrap_or(0);
+        let required = handshake_resp_msg_len(payload_len);
+        if response_buffer.len() < required {
+            return Err(NoiseError::ResponseBufferTooSmall);
+        }
+
+        let ResponderHandshakeState { mut h, mut ck, rs, re } = handshake_state;
+
+        // -> e
+        let e = StaticSecret::new(rng);
+        let e_pub = PublicKey::from(&e);
+
+        mix_hash(&mut h, e_pub.as_bytes());
+        let mut writer = Cursor::new(response_buffer);
+        writer.write(e_pub.as_bytes()).map_err(|_| NoiseError::ResponseBufferTooSmall)?;
+
+        // -> ee
+        let dh_output = e.diffie_hellman(&re);
+        mix_key(&mut ck, dh_output.as_bytes())?;
+
+        // -> se
+        let dh_output = e.diffie_hellman(&rs);
+        let k = mix_key(&mut ck, dh_output.as_bytes())?;
+
+        // -> payload
+        let aead = aes_key(&k[..]);
+        let mut in_out = payload.unwrap_or(&[]).to_vec();
+        let nonce = aead::Nonce::assume_unique_for_key([0u8; AES_NONCE_SIZE]);
+        aead.seal_in_place_append_tag(nonce, Aad::from(&h), &mut in_out)
+            .map_err(|_| NoiseError::Encrypt)?;
+
+        mix_hash(&mut h, &in_out[..]);
+        writer.write(&in_out[..]).map_err(|_| NoiseError::ResponseBufferTooSmall)?;
+
+        let (k1, k2) = hkdf_split(&ck, None)?;
+        // Responder: Write=k2, Read=k1 (Spec: split returns (temp_k1, temp_k2). Alice uses k1 to write, Bob uses k1 to read.)
+        // Initiator (Alice): new(k1, k2, rs).
+        // Responder (Bob): new(k2, k1, rs).
+        Ok(NoiseSession::new(k2, k1, rs))
     }
 }
 

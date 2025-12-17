@@ -32,7 +32,8 @@ impl Transport {
         let stream = TcpStream::connect(addr).await.context("Failed to connect via TCP")?;
         let stream = stream.compat();
         
-        let (stream, session, _) = self.handshake_initiator(stream, remote_public_key).await?;
+        let our_peer_id = self.get_peer_id();
+        let (stream, session, _) = self.handshake(stream, our_peer_id, remote_public_key).await?;
         
         Ok(NoiseStream::new(stream, session))
     }
@@ -51,6 +52,7 @@ impl Transport {
         // Construct the full message: prologue (our_peer_id + remote_public_key) + noise_message
         const PEER_ID_LEN: usize = 32;
         const PROLOGUE_SIZE: usize = PEER_ID_LEN + 32; // peer_id + public_key
+        const TIMESTAMP_SIZE: usize = 8;
         
         let (handshake_state, noise_msg) = {
             let mut rng = rand::thread_rng();
@@ -60,11 +62,19 @@ impl Transport {
             prologue[..PEER_ID_LEN].copy_from_slice(&our_peer_id);
             prologue[PEER_ID_LEN..].copy_from_slice(remote_public_key.as_bytes());
             
+            // Create payload: timestamp (8 bytes)
+            // Use current system time (millis)
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() as u64;
+            let payload = now.to_le_bytes();
+            
             self.noise_config.initiate_connection(
                 &mut rng,
                 &prologue,
                 remote_public_key,
-                None,
+                Some(&payload),
             ).map_err(|e| anyhow::anyhow!("Noise init failed: {}", e))?
         };
         
@@ -74,7 +84,7 @@ impl Transport {
         client_message.extend_from_slice(remote_public_key.as_bytes());
         client_message.extend_from_slice(&noise_msg);
 
-        println!("[NOISE] Sending handshake message ({} bytes: {} prologue + {} noise)...", 
+        println!("[NOISE] Sending handshake message ({} bytes: {} prologue + {} noise + payload inside noise)...", 
                  client_message.len(), PROLOGUE_SIZE, noise_msg.len());
         stream.write_all(&client_message).await?;
         stream.flush().await?;
@@ -82,7 +92,7 @@ impl Transport {
 
 
         // Read server response (fixed size, no length prefix)
-        const SERVER_MESSAGE_SIZE: usize = 48; // From Aptos handshake.rs
+        const SERVER_MESSAGE_SIZE: usize = 48; // From Aptos handshake.rs (noise::handshake_resp_msg_len(0))
         let mut server_response = [0u8; SERVER_MESSAGE_SIZE];
         stream.read_exact(&mut server_response).await
             .context("Failed to read server response")?;

@@ -52,7 +52,6 @@ impl Transport {
         // Construct the full message: prologue (our_peer_id + remote_public_key) + noise_message
         const PEER_ID_LEN: usize = 32;
         const PROLOGUE_SIZE: usize = PEER_ID_LEN + 32; // peer_id + public_key
-        const TIMESTAMP_SIZE: usize = 8;
         
         let (handshake_state, noise_msg) = {
             let mut rng = rand::thread_rng();

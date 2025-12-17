@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize, Serializer, Deserializer, de};
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, IpAddr};
+use std::net::{Ipv4Addr, Ipv6Addr, IpAddr};
 use x25519_dalek::PublicKey;
-use std::fmt;
 
 // See zapatos/types/src/network_address/mod.rs
 

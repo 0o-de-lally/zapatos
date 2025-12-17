@@ -2,7 +2,6 @@ use crate::config::seeds::SeedPeer;
 use crate::config::network_address::NetworkAddress;
 use anyhow::Result;
 use serde::Deserialize;
-use std::convert::TryFrom;
 use hex::FromHex;
 
 const MAINNET_VALIDATOR_SET_URL: &str = "https://api.mainnet.aptoslabs.com/v1/accounts/0x1/resource/0x1::stake::ValidatorSet";

@@ -33,7 +33,7 @@ use aptos_types::{
 use aptos_validator_transaction_pool::VTxnPoolState;
 use futures::StreamExt;
 use futures_channel::oneshot;
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio_retry::strategy::ExponentialBackoff;
 
 pub struct EpochManager<P: OnChainConfigProvider> {
@@ -61,6 +61,12 @@ pub struct EpochManager<P: OnChainConfigProvider> {
     randomness_override_seq_num: u64,
 
     key_storage: PersistentSafetyStorage,
+
+    // Timelock DKG sessions
+    // TODO: Implement in Phase 2 - Track active timelock DKG sessions per interval
+    // Key: interval number, Value: DKGManager for that interval's key generation
+    #[allow(dead_code)]
+    timelock_dkg_managers: HashMap<u64, DKGManager<DefaultDKG>>,
 }
 
 impl<P: OnChainConfigProvider> EpochManager<P> {
@@ -89,6 +95,7 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
             rb_config,
             randomness_override_seq_num,
             key_storage: storage(safety_rules_config),
+            timelock_dkg_managers: HashMap::new(),
         }
     }
 
@@ -287,25 +294,89 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
         )
     }
 
-    fn start_timelock_dkg(&self, event: StartKeyGenEvent) {
+    fn start_timelock_dkg(&mut self, event: StartKeyGenEvent) {
         info!("[Timelock] Starting keygen for interval {}", event.interval);
-        // PoC: Log that we started. Real implementation would spawn DKGManager with is_timelock=true
-        // and constructed DKGSessionMetadata.
+
+        // TODO: Implement actual DKG spawn in Phase 2
+        // Required steps:
+        // 1. Construct DKGSessionMetadata for this timelock interval
+        //    - Use event.config.threshold and event.config.total_validators
+        //    - Derive participants from current validator set
+        //    - Set session_id based on interval number
+        // 2. Spawn new DKGManager with is_timelock=true flag
+        //    - Similar to randomness DKG but for timelock purposes
+        //    - DKGManager will coordinate the distributed key generation
+        // 3. Store DKGManager in self.timelock_dkg_managers[interval]
+        // 4. When DKG completes, publish_public_key() will be called
+        //    - Extract MPK (master public key) from transcript
+        //    - Submit ValidatorTransaction::TimelockPublicKey
+        // 5. Store secret share for later reveal
+        //    - Call self.store_timelock_share(interval, share)
+
+        warn!(
+            "[Timelock] DKG spawn not yet implemented - stub only (interval {})",
+            event.interval
+        );
     }
 
     fn process_timelock_reveal(&self, event: RequestRevealEvent) {
         info!("[Timelock] Revealing share for interval {}", event.interval);
-        // PoC: Submit a dummy share
+
+        // TODO: Implement actual share computation in Phase 4
+        // Required steps:
+        // 1. Retrieve secret share from persistent storage
+        //    - Call self.retrieve_timelock_share(event.interval)
+        //    - Share is a scalar in Fr (BLS12-381 scalar field)
+        // 2. Compute BLS signature on interval identity
+        //    - identity = format!("timelock-interval-{}", event.interval)
+        //    - sig = H(identity)^secret_share  (where H: {0,1}* -> G1)
+        //    - This is the IBE decryption key component
+        // 3. Serialize signature to bytes (G1 point -> 48 bytes compressed)
+        // 4. Create ValidatorTransaction::TimelockShare
+        // 5. Submit to vtxn_pool with Topic::TIMELOCK
+        // 6. On-chain aggregation will combine shares from threshold validators
+        //    - Aggregated signature = sum of all validator signatures
+        //    - This becomes the IBE decryption key for the interval
+
+        // STUB: Submit dummy share for compilation
         let share = aptos_types::dkg::TimelockShare {
             interval: event.interval,
-            share: vec![0xDE, 0xAD, 0xBE, 0xEF], 
+            share: vec![0u8; 48], // Dummy 48-byte G1 point (BLS12-381 compressed)
         };
-         
-        let txn = ValidatorTransaction::TimelockShare(share); 
-        let _ = self.vtxn_pool.put(
-             Topic::TIMELOCK,
-             Arc::new(txn),
-             None,
+
+        let txn = ValidatorTransaction::TimelockShare(share);
+        if let Err(e) = self.vtxn_pool.put(Topic::TIMELOCK, Arc::new(txn), None) {
+            warn!("[Timelock] Failed to submit share to vtxn pool: {}", e);
+        }
+
+        warn!(
+            "[Timelock] Share computation not yet implemented - submitted dummy share (interval {})",
+            event.interval
         );
+    }
+
+    /// Store timelock secret share for later reveal.
+    /// TODO: Implement in Phase 4 - Add persistent storage
+    #[allow(dead_code)]
+    fn store_timelock_share(&mut self, interval: u64, share: &blst::min_sig::SecretKey) -> Result<()> {
+        // TODO: Persist share to disk via key_storage or separate timelock storage
+        // Format: Store as (interval -> secret_key_bytes) mapping
+        // Security: Encrypt with validator's long-term key? Or rely on disk encryption?
+        // Location: Extend PersistentSafetyStorage or create separate TimelockStorage?
+
+        let _ = (interval, share);
+        warn!("[Timelock] Share storage not implemented - data will be lost");
+        Ok(())
+    }
+
+    /// Retrieve stored timelock secret share.
+    /// TODO: Implement in Phase 4 - Add persistent storage
+    #[allow(dead_code)]
+    fn retrieve_timelock_share(&self, interval: u64) -> Result<blst::min_sig::SecretKey> {
+        // TODO: Load share from disk
+        // Return error if not found (validator may have joined after that interval)
+
+        let _ = interval;
+        Err(anyhow!("Share retrieval not implemented - no storage backend"))
     }
 }

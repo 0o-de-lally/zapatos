@@ -1,10 +1,12 @@
 module aptos_framework::timelock {
 
+    use std::option::{Self, Option};
     use aptos_std::table::{Self, Table};
     use aptos_framework::event::{Self, EventHandle};
     use aptos_framework::timestamp;
     use aptos_framework::system_addresses;
     use aptos_framework::account;
+    use aptos_framework::timelock_config;
 
     friend aptos_framework::block;
     friend aptos_framework::genesis;
@@ -73,9 +75,9 @@ module aptos_framework::timelock {
             return
         };
 
-        // Check if 1 hour has passed (3600 seconds * 1,000,000 microseconds)
-        let one_hour_micros = 3600 * 1000000;
-        if (now - state.last_rotation_time > one_hour_micros) {
+        // Check if configured interval has passed (get from timelock_config)
+        let interval_micros = timelock_config::get_interval_microseconds();
+        if (now - state.last_rotation_time > interval_micros) {
             let old_interval = state.current_interval;
              // Emit reveal event for the old interval
             event::emit_event(&mut state.request_reveal_events, RequestRevealEvent {
@@ -127,15 +129,79 @@ module aptos_framework::timelock {
         interval: u64,
         share: vector<u8>
     ) acquires TimelockState {
-        // TODO: Aggregation logic would go here.
-        // For PoC, just storing the first one for now or a list.
-        // The struct says `revealed_secrets: Table<u64, vector<u8>>`.
-        // We will just overwrite/store it to show flow.
-        
+        // TODO: Implement proper BLS signature aggregation in Phase 2
+        // Current behavior: Store first share only (placeholder)
+        // Real implementation needs to:
+        // 1. Verify validator authorization (via ValidatorTransaction context)
+        // 2. Verify BLS signature is valid for the interval identity
+        // 3. Collect shares from multiple validators
+        // 4. Once threshold reached, aggregate G1 points to compute final decryption key
+        // 5. Store aggregated key in revealed_secrets table
+        //
+        // For now, we just store the first share to allow basic testing
         let state = borrow_global_mut<TimelockState>(@aptos_framework);
          if (!table::contains(&state.revealed_secrets, interval)) {
             table::add(&mut state.revealed_secrets, interval, share);
         };
+        // TODO: Otherwise, aggregate with existing shares (BLS aggregation)
+    }
+
+    /// Get the current interval number.
+    /// Returns 0 if timelock is not initialized.
+    #[view]
+    public fun get_current_interval(): u64 acquires TimelockState {
+        if (!exists<TimelockState>(@aptos_framework)) {
+            return 0
+        };
+        borrow_global<TimelockState>(@aptos_framework).current_interval
+    }
+
+    /// Get the public key (MPK) for a specific interval.
+    /// Returns None if the public key hasn't been published yet.
+    ///
+    /// This is used by clients to encrypt messages to a future interval.
+    #[view]
+    public fun get_public_key(interval: u64): Option<vector<u8>> acquires TimelockState {
+        if (!exists<TimelockState>(@aptos_framework)) {
+            return option::none()
+        };
+        let state = borrow_global<TimelockState>(@aptos_framework);
+        if (table::contains(&state.public_keys, interval)) {
+            option::some(*table::borrow(&state.public_keys, interval))
+        } else {
+            option::none()
+        }
+    }
+
+    /// Check if the secret (aggregated decryption key) has been revealed for an interval.
+    /// Returns true if the secret is available for decryption.
+    ///
+    /// This allows clients to check if they can decrypt messages from a past interval.
+    #[view]
+    public fun is_secret_revealed(interval: u64): bool acquires TimelockState {
+        if (!exists<TimelockState>(@aptos_framework)) {
+            return false
+        };
+        let state = borrow_global<TimelockState>(@aptos_framework);
+        table::contains(&state.revealed_secrets, interval)
+    }
+
+    /// Get the revealed secret (aggregated decryption key) for a specific interval.
+    /// Returns None if the secret hasn't been revealed yet.
+    ///
+    /// This is used by clients to decrypt messages from a past interval.
+    /// Alias for backward compatibility.
+    #[view]
+    public fun get_secret(interval: u64): Option<vector<u8>> acquires TimelockState {
+        if (!exists<TimelockState>(@aptos_framework)) {
+            return option::none()
+        };
+        let state = borrow_global<TimelockState>(@aptos_framework);
+        if (table::contains(&state.revealed_secrets, interval)) {
+            option::some(*table::borrow(&state.revealed_secrets, interval))
+        } else {
+            option::none()
+        }
     }
 
     #[test_only]
@@ -144,6 +210,7 @@ module aptos_framework::timelock {
     #[test(framework = @aptos_framework)]
     public fun test_timelock_flow(framework: &signer) acquires TimelockState {
         timestamp::set_time_has_started_for_testing(framework);
+        account::create_account_for_test(@aptos_framework);
         initialize(framework);
         let vm = create_signer_for_test(@0x0);
 
@@ -174,22 +241,10 @@ module aptos_framework::timelock {
         assert!(table::contains(&state.revealed_secrets, 0), 102);
     }
 
-    #[test(framework = @aptos_framework)]
+    #[test]
     #[expected_failure(abort_code = 524294, location = aptos_framework::system_addresses)] // E_VM_NOT_APTOS_FRAMEWORK
-    public fun test_unauthorized_initialize(_framework: &signer) {
+    public fun test_unauthorized_initialize() {
         let not_framework = create_signer_for_test(@0x1);
         initialize(&not_framework);
-    }
-    #[view]
-    public fun get_secret(interval: u64): std::option::Option<vector<u8>> acquires TimelockState {
-        if (!exists<TimelockState>(@aptos_framework)) {
-            return std::option::none()
-        };
-        let state = borrow_global<TimelockState>(@aptos_framework);
-        if (table::contains(&state.revealed_secrets, interval)) {
-            std::option::some(*table::borrow(&state.revealed_secrets, interval))
-        } else {
-            std::option::none()
-        }
     }
 }

@@ -25,7 +25,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 /// two more (independent) pieces of data are generated:
 ///
 /// - **HKZG randomness** is generated and used in the DeKARTv2 range proof,
-///    to prove that the chunks lie in the correct range.
+///   to prove that the chunks lie in the correct range.
 /// - **ElGamal randomness** is generated and used to encrypt the chunks.
 ///
 /// To prove consistency between these components, we thus construct a Σ-protocol

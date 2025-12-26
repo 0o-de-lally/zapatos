@@ -69,6 +69,7 @@ impl<E: Pairing> ScalarProtocol<E> for merlin::Transcript {
 #[allow(non_snake_case)]
 #[allow(private_bounds)]
 #[allow(dead_code)] // Will be used in the new PVSS
+#[allow(clippy::upper_case_acronyms)]
 pub trait PVSS<E: Pairing, T: Transcript>: ScalarProtocol<E> {
     /// Append a domain separator for the PVSS protocol (in addition to the transcript-level DST used to initialise the FS transcript),
     /// consisting of a sharing configuration `sc`, which locks in the $t$ out of $n$ threshold.

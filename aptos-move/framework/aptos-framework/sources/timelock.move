@@ -188,7 +188,6 @@ module aptos_framework::timelock {
 
     /// Get the revealed secret (aggregated decryption key) for a specific interval.
     /// Returns None if the secret hasn't been revealed yet.
-    ///
     /// This is used by clients to decrypt messages from a past interval.
     /// Alias for backward compatibility.
     #[view]

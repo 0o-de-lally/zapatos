@@ -345,9 +345,9 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
         };
 
         let txn = ValidatorTransaction::TimelockShare(share);
-        if let Err(e) = self.vtxn_pool.put(Topic::TIMELOCK, Arc::new(txn), None) {
-            warn!("[Timelock] Failed to submit share to vtxn pool: {}", e);
-        }
+        // TODO: Uncomment when ready to actually submit
+        // let _guard = self.vtxn_pool.put(Topic::TIMELOCK, Arc::new(txn), None);
+        let _ = txn;
 
         warn!(
             "[Timelock] Share computation not yet implemented - submitted dummy share (interval {})",
@@ -358,7 +358,7 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
     /// Store timelock secret share for later reveal.
     /// TODO: Implement in Phase 4 - Add persistent storage
     #[allow(dead_code)]
-    fn store_timelock_share(&mut self, interval: u64, share: &blst::min_sig::SecretKey) -> Result<()> {
+    fn store_timelock_share(&mut self, interval: u64, share: &[u8]) -> Result<()> {
         // TODO: Persist share to disk via key_storage or separate timelock storage
         // Format: Store as (interval -> secret_key_bytes) mapping
         // Security: Encrypt with validator's long-term key? Or rely on disk encryption?
@@ -372,7 +372,7 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
     /// Retrieve stored timelock secret share.
     /// TODO: Implement in Phase 4 - Add persistent storage
     #[allow(dead_code)]
-    fn retrieve_timelock_share(&self, interval: u64) -> Result<blst::min_sig::SecretKey> {
+    fn retrieve_timelock_share(&self, interval: u64) -> Result<Vec<u8>> {
         // TODO: Load share from disk
         // Return error if not found (validator may have joined after that interval)
 

@@ -35,7 +35,7 @@ impl AptosVM {
     ) -> Result<(VMStatus, VMOutput), VMStatus> {
         let mut gas_meter = UnmeteredGasMeter;
         let mut session = self.new_session(resolver, session_id, None);
-        
+
         let args = vec![
             MoveValue::Signer(AccountAddress::ONE), // Or validator address? Using ONE/Framework for now as per dkg.rs pattern
             MoveValue::U64(dkg_transcript.metadata.epoch), // Reuse epoch as interval
@@ -61,9 +61,7 @@ impl AptosVM {
         let output = get_system_transaction_output(
             session,
             module_storage,
-            &self
-                .storage_gas_params(log_context)?
-                .change_set_configs,
+            &self.storage_gas_params(log_context)?.change_set_configs,
         )?;
 
         Ok((VMStatus::Executed, output))
@@ -79,7 +77,7 @@ impl AptosVM {
     ) -> Result<(VMStatus, VMOutput), VMStatus> {
         let mut gas_meter = UnmeteredGasMeter;
         let mut session = self.new_session(resolver, session_id, None);
-        
+
         let args = vec![
             MoveValue::Signer(AccountAddress::ONE),
             MoveValue::U64(share.interval),
@@ -105,9 +103,7 @@ impl AptosVM {
         let output = get_system_transaction_output(
             session,
             module_storage,
-            &self
-                .storage_gas_params(log_context)?
-                .change_set_configs,
+            &self.storage_gas_params(log_context)?.change_set_configs,
         )?;
 
         Ok((VMStatus::Executed, output))
@@ -133,8 +129,8 @@ mod tests {
             },
             transcript_bytes: vec![1, 2, 3],
         };
-        
-        // Note: Fully mocking AptosVM session creation for unit tests is complex and often done 
+
+        // Note: Fully mocking AptosVM session creation for unit tests is complex and often done
         // at integration level. Here we assert types exist and are importable.
         assert_eq!(transcript.metadata.epoch, 10);
     }

@@ -2,14 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use self::real_dkg::RealDKG;
+use crate::contract_event::ContractEvent;
 use crate::{
+    contract_event::ContractEvent,
     dkg::real_dkg::{rounding::DKGRoundingProfile, Transcripts},
     on_chain_config::{OnChainConfig, OnChainRandomnessConfig, RandomnessConfigMoveStruct},
     validator_verifier::{
         ValidatorConsensusInfo, ValidatorConsensusInfoMoveStruct, ValidatorVerifier,
     },
 };
-use crate::contract_event::ContractEvent;
 use anyhow::{bail, Context, Result};
 use aptos_crypto::Uniform;
 use aptos_crypto_derive::{BCSCryptoHash, CryptoHasher};

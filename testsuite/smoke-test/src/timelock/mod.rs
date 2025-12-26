@@ -84,10 +84,7 @@ pub async fn wait_for_interval_rotation(
 ///
 /// TODO: Implement in Phase 5
 #[allow(dead_code)]
-pub async fn verify_public_key_published(
-    client: &Client,
-    interval: u64,
-) -> Result<Vec<u8>> {
+pub async fn verify_public_key_published(client: &Client, interval: u64) -> Result<Vec<u8>> {
     let _ = (client, interval);
 
     // TODO: Implementation steps:

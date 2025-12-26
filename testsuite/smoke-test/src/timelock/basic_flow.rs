@@ -89,7 +89,10 @@ async fn test_timelock_basic_flow() {
     //     .unwrap();
     // assert_eq!(public_key.len(), 96, "BLS12-381 G2 point should be 96 bytes");
 
-    info!("Waiting for second rotation to trigger reveal ({}s)", interval_secs);
+    info!(
+        "Waiting for second rotation to trigger reveal ({}s)",
+        interval_secs
+    );
 
     // TODO: Step 4 - Wait for second rotation to interval 2
     // This should trigger:

@@ -4,8 +4,7 @@
 use crate::{
     abort_unless_feature_flag_enabled,
     natives::cryptography::algebra::{
-        abort_invariant_violated, AlgebraContext, Structure,
-        MOVE_ABORT_CODE_NOT_IMPLEMENTED,
+        abort_invariant_violated, AlgebraContext, Structure, MOVE_ABORT_CODE_NOT_IMPLEMENTED,
     },
     safe_borrow_element, structure_from_ty_arg,
 };

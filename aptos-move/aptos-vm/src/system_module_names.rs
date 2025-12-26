@@ -79,3 +79,13 @@ pub static TRANSACTION_FEE_MODULE: Lazy<ModuleId> = Lazy::new(|| {
 });
 
 pub const EMIT_FEE_STATEMENT: &IdentStr = ident_str!("emit_fee_statement");
+
+pub static TIMELOCK_MODULE: Lazy<ModuleId> = Lazy::new(|| {
+    ModuleId::new(
+        account_config::CORE_CODE_ADDRESS,
+        ident_str!("timelock").to_owned(),
+    )
+});
+
+pub const PUBLISH_PUBLIC_KEY: &IdentStr = ident_str!("publish_public_key");
+pub const PUBLISH_SECRET_SHARE: &IdentStr = ident_str!("publish_secret_share");

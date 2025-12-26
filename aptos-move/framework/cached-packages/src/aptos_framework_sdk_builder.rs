@@ -1141,6 +1141,18 @@ pub enum EntryFunctionCall {
         new_voter: AccountAddress,
     },
 
+    /// validators call this to publish the public key for a future interval
+    TimelockPublishPublicKey {
+        interval: u64,
+        pk: Vec<u8>,
+    },
+
+    /// validators call this to publish the secret share/signature for a past interval
+    TimelockPublishSecretShare {
+        interval: u64,
+        share: Vec<u8>,
+    },
+
     TransactionFeeConvertToAptosFaBurnRef {},
 
     /// Used in on-chain governances to update the major version for the next epoch.
@@ -1911,6 +1923,10 @@ impl EntryFunctionCall {
                 operator,
                 new_voter,
             } => staking_proxy_set_voter(operator, new_voter),
+            TimelockPublishPublicKey { interval, pk } => timelock_publish_public_key(interval, pk),
+            TimelockPublishSecretShare { interval, share } => {
+                timelock_publish_secret_share(interval, share)
+            },
             TransactionFeeConvertToAptosFaBurnRef {} => {
                 transaction_fee_convert_to_aptos_fa_burn_ref()
             },
@@ -5118,6 +5134,44 @@ pub fn staking_proxy_set_voter(
     ))
 }
 
+/// validators call this to publish the public key for a future interval
+pub fn timelock_publish_public_key(interval: u64, pk: Vec<u8>) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("timelock").to_owned(),
+        ),
+        ident_str!("publish_public_key").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&interval).unwrap(),
+            bcs::to_bytes(&pk).unwrap(),
+        ],
+    ))
+}
+
+/// validators call this to publish the secret share/signature for a past interval
+pub fn timelock_publish_secret_share(interval: u64, share: Vec<u8>) -> TransactionPayload {
+    TransactionPayload::EntryFunction(EntryFunction::new(
+        ModuleId::new(
+            AccountAddress::new([
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 1,
+            ]),
+            ident_str!("timelock").to_owned(),
+        ),
+        ident_str!("publish_secret_share").to_owned(),
+        vec![],
+        vec![
+            bcs::to_bytes(&interval).unwrap(),
+            bcs::to_bytes(&share).unwrap(),
+        ],
+    ))
+}
+
 pub fn transaction_fee_convert_to_aptos_fa_burn_ref() -> TransactionPayload {
     TransactionPayload::EntryFunction(EntryFunction::new(
         ModuleId::new(
@@ -7286,6 +7340,30 @@ mod decoder {
         }
     }
 
+    pub fn timelock_publish_public_key(payload: &TransactionPayload) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::TimelockPublishPublicKey {
+                interval: bcs::from_bytes(script.args().get(0)?).ok()?,
+                pk: bcs::from_bytes(script.args().get(1)?).ok()?,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn timelock_publish_secret_share(
+        payload: &TransactionPayload,
+    ) -> Option<EntryFunctionCall> {
+        if let TransactionPayload::EntryFunction(script) = payload {
+            Some(EntryFunctionCall::TimelockPublishSecretShare {
+                interval: bcs::from_bytes(script.args().get(0)?).ok()?,
+                share: bcs::from_bytes(script.args().get(1)?).ok()?,
+            })
+        } else {
+            None
+        }
+    }
+
     pub fn transaction_fee_convert_to_aptos_fa_burn_ref(
         payload: &TransactionPayload,
     ) -> Option<EntryFunctionCall> {
@@ -8088,6 +8166,14 @@ static SCRIPT_FUNCTION_DECODER_MAP: once_cell::sync::Lazy<EntryFunctionDecoderMa
         map.insert(
             "staking_proxy_set_voter".to_string(),
             Box::new(decoder::staking_proxy_set_voter),
+        );
+        map.insert(
+            "timelock_publish_public_key".to_string(),
+            Box::new(decoder::timelock_publish_public_key),
+        );
+        map.insert(
+            "timelock_publish_secret_share".to_string(),
+            Box::new(decoder::timelock_publish_secret_share),
         );
         map.insert(
             "transaction_fee_convert_to_aptos_fa_burn_ref".to_string(),

@@ -66,6 +66,7 @@ mod string_args;
 mod string_utils;
 mod swap_function_values;
 mod test_self;
+mod timelock_tests;
 mod token_event_store;
 mod token_objects;
 mod transaction_context;

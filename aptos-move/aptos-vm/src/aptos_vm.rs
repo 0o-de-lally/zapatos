@@ -47,7 +47,7 @@ use aptos_gas_schedule::{
     gas_feature_versions::{RELEASE_V1_10, RELEASE_V1_27, RELEASE_V1_38},
     AptosGasParameters, VMGasParameters,
 };
-use aptos_logger::{enabled, prelude::*, Level};
+use aptos_logger::{enabled, prelude::*, Level, error, warn, info};
 use aptos_metrics_core::IntCounterVecHelper;
 #[cfg(any(test, feature = "testing"))]
 use aptos_types::state_store::StateViewId;
@@ -677,12 +677,51 @@ impl AptosVM {
                 );
             }
 
-            let info = module_storage
-                .unmetered_get_deserialized_module(module_id.address(), module_id.name())
-                .ok()
-                .flatten()
-                .and_then(|module| get_metadata(&module.metadata))
-                .and_then(|m| m.extract_abort_info(code));
+            let info = match module_storage.unmetered_get_deserialized_module(module_id.address(), module_id.name()) {
+                Ok(Some(module)) => match get_metadata(&module.metadata) {
+                    Some(m) => match m.extract_abort_info(code) {
+                        Some(info) => Some(info),
+                        None => {
+                            warn!(
+                                *log_context,
+                                "Abort info not found for code {:#x} in module {}::{}",
+                                code,
+                                module_id.address(),
+                                module_id.name()
+                            );
+                            None
+                        }
+                    },
+                    None => {
+                        warn!(
+                            *log_context,
+                            "Metadata not found in module {}::{}",
+                            module_id.address(),
+                            module_id.name()
+                        );
+                        None
+                    }
+                },
+                Ok(None) => {
+                    warn!(
+                        *log_context,
+                        "Module {}::{} not found",
+                        module_id.address(),
+                        module_id.name()
+                    );
+                    None
+                }
+                Err(e) => {
+                    warn!(
+                        *log_context,
+                        "Failed to load module {}::{}: {:?}",
+                        module_id.address(),
+                        module_id.name(),
+                        e
+                    );
+                    None
+                }
+            };
 
             ExecutionStatus::MoveAbort {
                 location: AbortLocation::Module(module_id),

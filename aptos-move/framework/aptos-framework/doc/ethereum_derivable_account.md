@@ -46,6 +46,7 @@ Issued At: <issued_at>
 <b>use</b> <a href="../../aptos-stdlib/doc/bcs_stream.md#0x1_bcs_stream">0x1::bcs_stream</a>;
 <b>use</b> <a href="chain_id.md#0x1_chain_id">0x1::chain_id</a>;
 <b>use</b> <a href="common_account_abstractions_utils.md#0x1_common_account_abstractions_utils">0x1::common_account_abstractions_utils</a>;
+<b>use</b> <a href="../../aptos-stdlib/doc/debug.md#0x1_debug">0x1::debug</a>;
 <b>use</b> <a href="../../aptos-stdlib/../move-stdlib/doc/option.md#0x1_option">0x1::option</a>;
 <b>use</b> <a href="../../aptos-stdlib/doc/secp256k1.md#0x1_secp256k1">0x1::secp256k1</a>;
 <b>use</b> <a href="../../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string">0x1::string</a>;
@@ -425,15 +426,47 @@ We include the issued_at in the signature as it is a required field in the SIWE 
     aa_auth_data: AbstractionAuthData,
     entry_function_name: &<a href="../../aptos-stdlib/../move-stdlib/doc/vector.md#0x1_vector">vector</a>&lt;u8&gt;
 ) {
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"=== ETHEREUM DERIVABLE ACCOUNT DEBUG ===");
+
     <b>let</b> derivable_abstract_public_key = aa_auth_data.derivable_abstract_public_key();
     <b>let</b> abstract_public_key = <a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account_deserialize_abstract_public_key">deserialize_abstract_public_key</a>(derivable_abstract_public_key);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Entry function name:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(entry_function_name);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Ethereum <b>address</b>:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&abstract_public_key.ethereum_address);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Domain:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&abstract_public_key.domain);
+
     <b>let</b> digest_utf8 = <a href="../../aptos-stdlib/doc/string_utils.md#0x1_string_utils_to_string">string_utils::to_string</a>(aa_auth_data.digest()).bytes();
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Digest (hex <a href="../../aptos-stdlib/../move-stdlib/doc/string.md#0x1_string">string</a>):");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(digest_utf8);
+
     <b>let</b> abstract_signature = <a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account_deserialize_abstract_signature">deserialize_abstract_signature</a>(aa_auth_data.derivable_abstract_signature());
     <b>let</b> issued_at = abstract_signature.issued_at.bytes();
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Issued at:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(issued_at);
+
     <b>let</b> scheme = abstract_signature.scheme.bytes();
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Scheme:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(scheme);
+
     <b>let</b> message = <a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account_construct_message">construct_message</a>(&abstract_public_key.ethereum_address, &abstract_public_key.domain, entry_function_name, digest_utf8, issued_at, scheme);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Constructed SIWE message:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&message);
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Message length:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&message.length());
+
     <b>let</b> hashed_message = <a href="../../aptos-stdlib/../move-stdlib/doc/hash.md#0x1_aptos_hash_keccak256">aptos_hash::keccak256</a>(message);
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Hashed message (keccak256):");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&hashed_message);
+
     <b>let</b> public_key_bytes = <a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account_recover_public_key">recover_public_key</a>(&abstract_signature.signature, &hashed_message);
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Recovered <b>public</b> key:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&public_key_bytes);
 
     // 1. Skip the 0x04 prefix (take the bytes after the first byte)
     <b>let</b> public_key_without_prefix = public_key_bytes.slice(1, public_key_bytes.length());
@@ -441,12 +474,24 @@ We include the issued_at in the signature as it is a required field in the SIWE 
     <b>let</b> kexHash = <a href="../../aptos-stdlib/../move-stdlib/doc/hash.md#0x1_aptos_hash_keccak256">aptos_hash::keccak256</a>(public_key_without_prefix);
     // 3. Slice the last 20 bytes (this is the Ethereum <b>address</b>)
     <b>let</b> recovered_addr = kexHash.slice(12, 32);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Recovered Ethereum <b>address</b> (bytes):");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&recovered_addr);
+
     // 4. Remove the 0x prefix from the utf8 <a href="account.md#0x1_account">account</a> <b>address</b>
     <b>let</b> ethereum_address_without_prefix = abstract_public_key.ethereum_address.slice(2, abstract_public_key.ethereum_address.length());
 
     <b>let</b> account_address_vec = base16_utf8_to_vec_u8(ethereum_address_without_prefix);
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Expected Ethereum <b>address</b> (bytes):");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&account_address_vec);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"Addresses match:");
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&(recovered_addr == account_address_vec));
+
     // Verify that the recovered <b>address</b> matches the domain <a href="account.md#0x1_account">account</a> identity
     <b>assert</b>!(recovered_addr == account_address_vec, <a href="ethereum_derivable_account.md#0x1_ethereum_derivable_account_EADDR_MISMATCH">EADDR_MISMATCH</a>);
+
+    <a href="../../aptos-stdlib/doc/debug.md#0x1_debug_print">debug::print</a>(&b"=== SIGNATURE VERIFICATION PASSED ===");
 }
 </code></pre>
 

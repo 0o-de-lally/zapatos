@@ -3,7 +3,11 @@
 
 #[cfg(any(test, feature = "fuzzing"))]
 use crate::dkg::DKGTranscriptMetadata;
-use crate::{dkg::{DKGTranscript, TimelockShare}, jwks, validator_verifier::ValidatorVerifier};
+use crate::{
+    dkg::{DKGTranscript, TimelockShare},
+    jwks,
+    validator_verifier::ValidatorVerifier,
+};
 use anyhow::Context;
 use aptos_crypto_derive::{BCSCryptoHash, CryptoHasher};
 #[cfg(any(test, feature = "fuzzing"))]
@@ -41,7 +45,9 @@ impl ValidatorTransaction {
             ValidatorTransaction::ObservedJWKUpdate(_) => {
                 "validator_transaction__observed_jwk_update"
             },
-            ValidatorTransaction::TimelockDKGResult(_) => "validator_transaction__timelock_dkg_result",
+            ValidatorTransaction::TimelockDKGResult(_) => {
+                "validator_transaction__timelock_dkg_result"
+            },
             ValidatorTransaction::TimelockShare(_) => "validator_transaction__timelock_share",
         }
     }

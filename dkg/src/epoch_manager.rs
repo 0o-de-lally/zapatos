@@ -12,17 +12,22 @@ use anyhow::{anyhow, Result};
 use aptos_bounded_executor::BoundedExecutor;
 use aptos_channels::{aptos_channel, message_queues::QueueStyle};
 use aptos_config::config::{ReliableBroadcastConfig, SafetyRulesConfig};
+use aptos_dkg;
 use aptos_event_notifications::{
     EventNotification, EventNotificationListener, ReconfigNotification,
     ReconfigNotificationListener,
 };
+use aptos_infallible;
 use aptos_logger::{debug, error, info, warn};
 use aptos_network::{application::interface::NetworkClient, protocols::network::Event};
 use aptos_reliable_broadcast::ReliableBroadcast;
 use aptos_safety_rules::{safety_rules_manager::storage, PersistentSafetyStorage};
 use aptos_types::{
     account_address::AccountAddress,
-    dkg::{DKGStartEvent, DKGState, DefaultDKG, StartKeyGenEvent, RequestRevealEvent},
+    dkg::{
+        DKGSessionMetadata, DKGStartEvent, DKGState, DefaultDKG, RequestRevealEvent,
+        StartKeyGenEvent,
+    },
     epoch_state::EpochState,
     on_chain_config::{
         OnChainConfigPayload, OnChainConfigProvider, OnChainConsensusConfig,
@@ -33,7 +38,7 @@ use aptos_types::{
 use aptos_validator_transaction_pool::VTxnPoolState;
 use futures::StreamExt;
 use futures_channel::oneshot;
-use std::{sync::Arc, time::Duration};
+use std::{collections::HashMap, sync::Arc, time::Duration};
 use tokio_retry::strategy::ExponentialBackoff;
 
 pub struct EpochManager<P: OnChainConfigProvider> {
@@ -61,6 +66,23 @@ pub struct EpochManager<P: OnChainConfigProvider> {
     randomness_override_seq_num: u64,
 
     key_storage: PersistentSafetyStorage,
+
+    // Timelock DKG sessions
+    // Track close channels for active timelock DKG sessions by interval number
+    // Multiple intervals can have concurrent DKG sessions running
+    // We store close_tx to allow graceful shutdown of each DKG session
+    timelock_dkg_close_txs: HashMap<u64, oneshot::Sender<oneshot::Sender<()>>>,
+
+    // RPC message channels for timelock DKG communication per interval
+    // We need separate channels for each timelock interval since they run concurrently
+    // Note: We don't store start_event_tx because we send the event immediately after spawn
+    timelock_rpc_msg_txs:
+        HashMap<u64, aptos_channel::Sender<AccountAddress, (AccountAddress, IncomingRpcRequest)>>,
+
+    // In-memory storage of timelock secret shares (interval -> scalar_bytes)
+    // TODO Phase 4: Replace with persistent storage to survive restarts
+    // These are the BLS scalar shares from DKG that will be used to compute decryption keys
+    timelock_shares_cache: HashMap<u64, Vec<u8>>,
 }
 
 impl<P: OnChainConfigProvider> EpochManager<P> {
@@ -89,6 +111,9 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
             rb_config,
             randomness_override_seq_num,
             key_storage: storage(safety_rules_config),
+            timelock_dkg_close_txs: HashMap::new(),
+            timelock_rpc_msg_txs: HashMap::new(),
+            timelock_shares_cache: HashMap::new(),
         }
     }
 
@@ -287,25 +312,322 @@ impl<P: OnChainConfigProvider> EpochManager<P> {
         )
     }
 
-    fn start_timelock_dkg(&self, event: StartKeyGenEvent) {
-        info!("[Timelock] Starting keygen for interval {}", event.interval);
-        // PoC: Log that we started. Real implementation would spawn DKGManager with is_timelock=true
-        // and constructed DKGSessionMetadata.
+    /// Build DKGSessionMetadata for a timelock interval.
+    ///
+    /// For timelock DKG, we construct metadata from the current epoch state
+    /// and the timelock configuration from the event.
+    fn build_timelock_session_metadata(
+        &self,
+        event: &StartKeyGenEvent,
+        epoch_state: &Arc<EpochState>,
+    ) -> DKGSessionMetadata {
+        use aptos_types::{
+            on_chain_config::{OnChainRandomnessConfig, RandomnessConfigMoveStruct},
+            validator_verifier::ValidatorConsensusInfoMoveStruct,
+        };
+
+        // Convert current validator set to move struct format
+        let validator_consensus_infos: Vec<ValidatorConsensusInfoMoveStruct> = epoch_state
+            .verifier
+            .get_ordered_account_addresses_iter()
+            .map(|addr| {
+                let voting_power = epoch_state.verifier.get_voting_power(&addr).unwrap_or(0);
+                let public_key = epoch_state
+                    .verifier
+                    .get_public_key(&addr)
+                    .expect("public key must exist for validator");
+
+                // Convert public key to bytes for MoveStruct
+                let pk_bytes =
+                    bcs::to_bytes(&public_key).expect("public key serialization should not fail");
+
+                ValidatorConsensusInfoMoveStruct {
+                    addr,
+                    pk_bytes,
+                    voting_power,
+                }
+            })
+            .collect();
+
+        // Build randomness config from timelock config
+        // For timelock, we use the threshold from the event
+        // Convert absolute threshold to percentage (0-100)
+        let total = event.config.total_validators;
+        let threshold_percentage = if total > 0 {
+            (event.config.threshold * 100) / total
+        } else {
+            50 // Default to 50% if total is zero (shouldn't happen)
+        };
+
+        // Create RandomnessConfig using the public API
+        let randomness_config_enum = OnChainRandomnessConfig::new_v1(
+            threshold_percentage, // secrecy_threshold_in_percentage
+            threshold_percentage, // reconstruct_threshold_in_percentage
+        );
+
+        let randomness_config = RandomnessConfigMoveStruct::from(randomness_config_enum);
+
+        DKGSessionMetadata {
+            dealer_epoch: epoch_state.epoch,
+            randomness_config,
+            dealer_validator_set: validator_consensus_infos.clone(),
+            target_validator_set: validator_consensus_infos,
+        }
+    }
+
+    fn start_timelock_dkg(&mut self, event: StartKeyGenEvent) {
+        info!(
+            "[Timelock] Starting DKG for interval {} (threshold={}, validators={})",
+            event.interval, event.config.threshold, event.config.total_validators
+        );
+
+        // Get current epoch state - needed for validator set and network setup
+        let epoch_state = match &self.epoch_state {
+            Some(state) => state.clone(),
+            None => {
+                error!("[Timelock] Cannot start DKG - no epoch state available");
+                return;
+            },
+        };
+
+        // Check if we're in the current validator set
+        let my_index = match epoch_state
+            .verifier
+            .address_to_validator_index()
+            .get(&self.my_addr)
+            .copied()
+        {
+            Some(idx) => idx,
+            None => {
+                warn!(
+                    "[Timelock] Not participating in DKG for interval {} - not in validator set",
+                    event.interval
+                );
+                return;
+            },
+        };
+
+        // Get our consensus secret key for dealing
+        let my_pk = match epoch_state.verifier.get_public_key(&self.my_addr) {
+            Some(pk) => pk,
+            None => {
+                error!("[Timelock] Cannot find own public key in validator set");
+                return;
+            },
+        };
+
+        let dealer_sk = match self.key_storage.consensus_sk_by_pk(my_pk) {
+            Ok(sk) => Arc::new(sk),
+            Err(e) => {
+                error!("[Timelock] Failed to load consensus secret key: {}", e);
+                return;
+            },
+        };
+
+        // Set up network components for this DKG session
+        let network_sender = self.create_network_sender();
+        let rb = ReliableBroadcast::new(
+            self.my_addr,
+            epoch_state.verifier.get_ordered_account_addresses(),
+            Arc::new(network_sender),
+            ExponentialBackoff::from_millis(self.rb_config.backoff_policy_base_ms)
+                .factor(self.rb_config.backoff_policy_factor)
+                .max_delay(Duration::from_millis(
+                    self.rb_config.backoff_policy_max_delay_ms,
+                )),
+            aptos_time_service::TimeService::real(),
+            Duration::from_millis(self.rb_config.rpc_timeout_ms),
+            BoundedExecutor::new(8, tokio::runtime::Handle::current()),
+        );
+        let agg_trx_producer = Arc::new(AggTranscriptProducer::new(rb));
+
+        // Create channels for this timelock DKG session
+        let (start_event_tx, start_event_rx) = aptos_channel::new(QueueStyle::KLAST, 1, None);
+        let (rpc_msg_tx, rpc_msg_rx) = aptos_channel::new::<
+            AccountAddress,
+            (AccountAddress, IncomingRpcRequest),
+        >(QueueStyle::FIFO, 100, None);
+        let (close_tx, close_rx) = oneshot::channel();
+
+        // Build DKGSessionMetadata for this timelock interval
+        // Note: For timelock, we use a simplified metadata structure
+        // The threshold/total come from the event.config
+        let session_metadata = self.build_timelock_session_metadata(&event, &epoch_state);
+
+        // Get current timestamp for DKG start
+        let start_time_us = aptos_infallible::duration_since_epoch().as_micros() as u64;
+
+        // Create the DKGStartEvent to trigger the DKG
+        let dkg_start_event = DKGStartEvent {
+            session_metadata,
+            start_time_us,
+        };
+
+        // Store channels for routing future messages to this interval's DKG
+        self.timelock_rpc_msg_txs.insert(event.interval, rpc_msg_tx);
+
+        // Create DKG manager with is_timelock=true
+        let dkg_manager = DKGManager::<DefaultDKG>::new(
+            dealer_sk,
+            my_index,
+            self.my_addr,
+            epoch_state,
+            agg_trx_producer,
+            self.vtxn_pool.clone(),
+            true, // is_timelock flag - tells DKGManager to submit TimelockDKGResult
+        );
+
+        // Spawn the DKG manager task
+        // Note: in_progress_session is None since this is a fresh timelock DKG start
+        let interval = event.interval;
+        tokio::spawn(dkg_manager.run(None, start_event_rx, rpc_msg_rx, close_rx));
+
+        // Send the start event to trigger DKG execution
+        if let Err(e) = start_event_tx.push((), dkg_start_event) {
+            error!(
+                "[Timelock] Failed to send start event to DKG manager for interval {}: {:?}",
+                interval, e
+            );
+            return;
+        }
+
+        // Store close channel for later cleanup
+        self.timelock_dkg_close_txs.insert(interval, close_tx);
+
+        info!(
+            "[Timelock] Spawned and triggered DKG manager for interval {} (validator index {})",
+            interval, my_index
+        );
+
+        // TODO Phase 3/4: After DKG completes successfully, we need to:
+        // 1. Detect when the DKG transcript is finalized on-chain
+        // 2. Extract our secret share from the local DKG state
+        // 3. Store it using self.store_timelock_share(interval, share_bytes)
+        // Options:
+        //   a) Add a callback to DKGManager for completion notification
+        //   b) Poll blockchain state for TimelockDKGResult events
+        //   c) Have DKGManager write shares directly to storage
+        // For now, this secret share extraction is deferred
     }
 
     fn process_timelock_reveal(&self, event: RequestRevealEvent) {
         info!("[Timelock] Revealing share for interval {}", event.interval);
-        // PoC: Submit a dummy share
+
+        // 1. Retrieve secret share from storage
+        let share_bytes = match self.retrieve_timelock_share(event.interval) {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                warn!(
+                    "[Timelock] Cannot reveal share for interval {}: {}",
+                    event.interval, e
+                );
+                return;
+            },
+        };
+
+        // 2. Deserialize the secret share scalar
+        let scalar = match aptos_crypto::blstrs::scalar_from_bytes_le(&share_bytes) {
+            Ok(s) => s,
+            Err(e) => {
+                error!(
+                    "[Timelock] Failed to deserialize secret share for interval {}: {}",
+                    event.interval, e
+                );
+                return;
+            },
+        };
+
+        // 3. Compute timelock identity for this interval
+        // TODO: Get chain_id from epoch_state or config
+        // For now, hardcode to 1 (testnet). This should come from ChainId config.
+        let chain_id = 1u8;
+        let identity = aptos_dkg::ibe::compute_timelock_identity(event.interval, chain_id);
+
+        // 4. Derive decryption key: dk = scalar * H(identity)
+        let decryption_key = match aptos_dkg::ibe::derive_decryption_key(&scalar, &identity) {
+            Ok(dk) => dk,
+            Err(e) => {
+                error!(
+                    "[Timelock] Failed to derive decryption key for interval {}: {}",
+                    event.interval, e
+                );
+                return;
+            },
+        };
+
+        // 5. Serialize decryption key to bytes (G1 compressed = 48 bytes)
+        let dk_bytes = match aptos_dkg::ibe::serialize_g1(&decryption_key) {
+            Ok(bytes) => bytes,
+            Err(e) => {
+                error!(
+                    "[Timelock] Failed to serialize decryption key for interval {}: {}",
+                    event.interval, e
+                );
+                return;
+            },
+        };
+
+        // 6. Create and submit TimelockShare transaction
         let share = aptos_types::dkg::TimelockShare {
             interval: event.interval,
-            share: vec![0xDE, 0xAD, 0xBE, 0xEF], 
+            share: dk_bytes,
         };
-         
-        let txn = ValidatorTransaction::TimelockShare(share); 
-        let _ = self.vtxn_pool.put(
-             Topic::TIMELOCK,
-             Arc::new(txn),
-             None,
+
+        let txn = ValidatorTransaction::TimelockShare(share);
+        let _guard = self.vtxn_pool.put(Topic::TIMELOCK, Arc::new(txn), None);
+
+        info!(
+            "[Timelock] Successfully computed and submitted decryption key share for interval {}",
+            event.interval
         );
+    }
+
+    /// Store timelock secret share for later reveal.
+    ///
+    /// Currently uses in-memory cache. TODO Phase 4: Add persistent storage
+    /// to survive node restarts.
+    fn store_timelock_share(&mut self, interval: u64, share: &[u8]) -> Result<()> {
+        info!(
+            "[Timelock] Storing secret share for interval {} ({} bytes)",
+            interval,
+            share.len()
+        );
+
+        // Store in-memory for now
+        self.timelock_shares_cache.insert(interval, share.to_vec());
+
+        // TODO Phase 4: Persist to disk
+        // - Extend PersistentSafetyStorage or create TimelockShareStorage
+        // - Encrypt with validator's consensus key
+        // - Handle cleanup of old shares (after reveal + some grace period)
+
+        warn!(
+            "[Timelock] Share for interval {} stored in-memory only - will be lost on restart",
+            interval
+        );
+        Ok(())
+    }
+
+    /// Retrieve stored timelock secret share.
+    ///
+    /// Returns error if share not found (validator may have joined after that interval).
+    fn retrieve_timelock_share(&self, interval: u64) -> Result<Vec<u8>> {
+        info!(
+            "[Timelock] Retrieving secret share for interval {}",
+            interval
+        );
+
+        // Lookup in-memory cache
+        self.timelock_shares_cache
+            .get(&interval)
+            .cloned()
+            .ok_or_else(|| {
+                anyhow!(
+                    "No secret share found for interval {}. Validator may not have participated in DKG for this interval.",
+                    interval
+                )
+            })
+
+        // TODO Phase 4: Load from persistent storage if not in cache
     }
 }

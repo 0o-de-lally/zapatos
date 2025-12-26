@@ -9,22 +9,57 @@
 
 pub mod basic_flow;
 
-use crate::utils;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use aptos_api_types::ViewFunction;
 use aptos_logger::info;
 use aptos_rest_client::Client;
-use move_core_types::account_address::AccountAddress;
-use std::time::Duration;
-use tokio::time::Instant;
+use move_core_types::{identifier::Identifier, language_storage::ModuleId};
+use std::{str::FromStr, time::Duration};
+use tokio::time::{sleep, Instant};
 
 /// Represents the on-chain timelock state.
-/// TODO: Import from aptos_types once types are defined there
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct TimelockState {
     pub current_interval: u64,
     pub last_rotation_time: u64,
-    // Note: Tables can't be easily represented here, just track existence
+}
+
+/// Get current interval number from on-chain state.
+///
+/// Calls the timelock::get_current_interval() view function.
+pub async fn get_current_interval(client: &Client) -> Result<u64> {
+    let view_function = ViewFunction {
+        module: ModuleId::from_str("0x1::timelock").map_err(|e| anyhow!("{}", e))?,
+        function: Identifier::from_str("get_current_interval").map_err(|e| anyhow!("{}", e))?,
+        ty_args: vec![],
+        args: vec![],
+    };
+
+    let result: Vec<u64> = client
+        .view_bcs(&view_function, None)
+        .await
+        .map_err(|e| anyhow!("Failed to call get_current_interval: {}", e))?
+        .into_inner();
+
+    result
+        .first()
+        .copied()
+        .ok_or_else(|| anyhow!("get_current_interval returned empty result"))
+}
+
+/// Check if timelock is initialized on-chain.
+///
+/// Queries the get_current_interval view function - if it returns successfully,
+/// the timelock is initialized. If it fails, it's not initialized.
+pub async fn is_timelock_initialized(client: &Client) -> Result<bool> {
+    match get_current_interval(client).await {
+        Ok(_) => Ok(true),
+        Err(e) => {
+            info!("[Timelock Test] Timelock not initialized: {}", e);
+            Ok(false)
+        }
+    }
 }
 
 /// Wait for timelock interval to rotate to target interval.
@@ -42,28 +77,45 @@ pub struct TimelockState {
 ///
 /// # Errors
 /// Returns error if timeout is reached before rotation
-///
-/// TODO: Implement in Phase 5
-#[allow(dead_code)]
 pub async fn wait_for_interval_rotation(
     client: &Client,
     target_interval: u64,
     timeout_secs: u64,
 ) -> Result<TimelockState> {
-    let _ = (client, target_interval, timeout_secs);
+    let start = Instant::now();
+    let timeout = Duration::from_secs(timeout_secs);
 
-    // TODO: Implementation steps:
-    // 1. Create timer with Instant::now()
-    // 2. Loop while timer.elapsed().as_secs() < timeout_secs
-    // 3. Query TimelockState from chain:
-    //    let state = utils::get_on_chain_resource::<TimelockState>(client).await;
-    // 4. Check if state.current_interval >= target_interval
-    // 5. If yes, return state
-    // 6. If no, sleep for 1 second and retry
-    // 7. If timeout, return error
+    loop {
+        let current = get_current_interval(client).await?;
 
-    info!("[Timelock Test] wait_for_interval_rotation not yet implemented");
-    unimplemented!("TODO: Implement in Phase 5")
+        if current >= target_interval {
+            info!(
+                "[Timelock Test] Reached interval {} (target: {})",
+                current, target_interval
+            );
+            return Ok(TimelockState {
+                current_interval: current,
+                last_rotation_time: 0, // Not tracked via view function
+            });
+        }
+
+        if start.elapsed() > timeout {
+            return Err(anyhow!(
+                "Timeout waiting for interval rotation: current={}, target={}",
+                current,
+                target_interval
+            ));
+        }
+
+        info!(
+            "[Timelock Test] Waiting for rotation: current={}, target={}, elapsed={:.1}s",
+            current,
+            target_interval,
+            start.elapsed().as_secs_f64()
+        );
+
+        sleep(Duration::from_secs(1)).await;
+    }
 }
 
 /// Verify public key is published for interval.
@@ -81,80 +133,66 @@ pub async fn wait_for_interval_rotation(
 ///
 /// # Errors
 /// Returns error if public key is not published
-///
-/// TODO: Implement in Phase 5
-#[allow(dead_code)]
 pub async fn verify_public_key_published(client: &Client, interval: u64) -> Result<Vec<u8>> {
-    let _ = (client, interval);
+    let view_function = ViewFunction {
+        module: ModuleId::from_str("0x1::timelock").map_err(|e| anyhow!("{}", e))?,
+        function: Identifier::from_str("get_public_key").map_err(|e| anyhow!("{}", e))?,
+        ty_args: vec![],
+        args: vec![bcs::to_bytes(&interval)?],
+    };
 
-    // TODO: Implementation steps:
-    // 1. Call view function: timelock::get_public_key(interval)
-    // 2. If Some(pk), return pk
-    // 3. If None, return error
+    // Result is Option<vector<u8>> which BCS-deserializes as Vec<Option<Vec<u8>>>
+    let result: Vec<Option<Vec<u8>>> = client
+        .view_bcs(&view_function, None)
+        .await
+        .map_err(|e| anyhow!("Failed to call get_public_key: {}", e))?
+        .into_inner();
 
-    info!("[Timelock Test] verify_public_key_published not yet implemented");
-    unimplemented!("TODO: Implement in Phase 5")
+    result
+        .first()
+        .cloned()
+        .flatten()
+        .ok_or_else(|| anyhow!("Public key not published for interval {}", interval))
 }
 
 /// Verify secret is aggregated for interval.
 ///
 /// Queries the timelock module to check if the aggregated decryption key
-/// has been revealed for the specified interval. This allows auction
-/// winners to be determined.
+/// has been revealed for the specified interval.
 ///
 /// # Arguments
 /// - client: REST client to query blockchain state
 /// - interval: Interval number to check
-/// - expected_threshold: Expected number of shares that should be aggregated
+/// - _expected_threshold: (unused) Expected number of shares that should be aggregated
 ///
 /// # Returns
 /// Aggregated secret key bytes if revealed
 ///
 /// # Errors
 /// Returns error if secret is not revealed
-///
-/// TODO: Implement in Phase 5
-#[allow(dead_code)]
 pub async fn verify_secret_aggregated(
     client: &Client,
     interval: u64,
-    expected_threshold: u64,
+    _expected_threshold: u64,
 ) -> Result<Vec<u8>> {
-    let _ = (client, interval, expected_threshold);
+    let view_function = ViewFunction {
+        module: ModuleId::from_str("0x1::timelock").map_err(|e| anyhow!("{}", e))?,
+        function: Identifier::from_str("get_secret").map_err(|e| anyhow!("{}", e))?,
+        ty_args: vec![],
+        args: vec![bcs::to_bytes(&interval)?],
+    };
 
-    // TODO: Implementation steps:
-    // 1. Call view function: timelock::get_secret(interval)
-    // 2. If Some(secret), verify it's valid (e.g., correct length)
-    // 3. Optionally verify threshold was met (need on-chain tracking)
-    // 4. Return secret
-    // 5. If None, return error
+    // Result is Option<vector<u8>>
+    let result: Vec<Option<Vec<u8>>> = client
+        .view_bcs(&view_function, None)
+        .await
+        .map_err(|e| anyhow!("Failed to call get_secret: {}", e))?
+        .into_inner();
 
-    info!("[Timelock Test] verify_secret_aggregated not yet implemented");
-    unimplemented!("TODO: Implement in Phase 5")
+    result
+        .first()
+        .cloned()
+        .flatten()
+        .ok_or_else(|| anyhow!("Secret not aggregated for interval {}", interval))
 }
 
-/// Get current interval number from on-chain state.
-///
-/// TODO: Implement in Phase 5
-#[allow(dead_code)]
-pub async fn get_current_interval(client: &Client) -> Result<u64> {
-    let _ = client;
-
-    // TODO: Call view function: timelock::get_current_interval()
-
-    info!("[Timelock Test] get_current_interval not yet implemented");
-    unimplemented!("TODO: Implement in Phase 5")
-}
-
-/// Check if timelock is initialized on-chain.
-///
-/// TODO: Implement in Phase 5
-#[allow(dead_code)]
-pub async fn is_timelock_initialized(client: &Client) -> Result<bool> {
-    let _ = client;
-
-    // TODO: Query if TimelockState resource exists at @aptos_framework
-
-    info!("[Timelock Test] is_timelock_initialized not yet implemented");
-    unimplemented!("TODO: Implement in Phase 5")
-}
